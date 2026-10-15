@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Портал Лискас</title>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500&family=Unbounded:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#efe9ff;--acc:#a273ff;--acc2:#e06af0;--bg:#0a0618;color-scheme:dark;--top:calc(10px + env(safe-area-inset-top,0px));--bot:calc(14px + env(safe-area-inset-bottom,0px))}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:16px Rubik,system-ui,sans-serif;overflow:hidden;touch-action:none}
+[hidden]{display:none!important}
+canvas{position:fixed;inset:0;width:100%;height:100%}
+.ov{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(8,4,20,.55);padding:20px}
+.ov.dark{background:rgba(5,2,14,.92)}
+button{font-family:inherit;cursor:pointer}
+.b{width:min(78vw,300px);padding:14px;border-radius:14px;border:1px solid rgba(255,255,255,.22);background:rgba(34,20,70,.75);color:#fff;font:500 17px Rubik,sans-serif}
+.b.p{background:linear-gradient(90deg,#7b3fe4,#c43fd6);border:0}
+.b:disabled{opacity:.4}
+.b:focus-visible,input:focus-visible{outline:2px solid var(--acc2);outline-offset:2px}
+#ttl{font:700 clamp(28px,9vw,46px)/1.1 Unbounded,Rubik,sans-serif;text-align:center;margin:0 0 4px;text-shadow:0 0 18px #a273ff,0 0 40px #7b3fe4;animation:gl 3.2s infinite}
+@keyframes gl{0%,92%,100%{transform:none;text-shadow:0 0 18px #a273ff,0 0 40px #7b3fe4}94%{transform:translateX(-4px);text-shadow:3px 0 #f0f,-3px 0 #0ff}96%{transform:translateX(4px);text-shadow:-3px 0 #f0f,3px 0 #0ff}}
+.tag{opacity:.7;font-size:14px;margin:0 0 12px;text-align:center}
+#hud{position:fixed;left:0;right:0;top:0;padding:var(--top) 12px 0;pointer-events:none}
+#sub{min-height:22px;text-align:center;font-style:italic;color:#d9c6ff;text-shadow:0 1px 6px #000;font-size:15px}
+#hint{margin-top:4px;text-align:center;font-size:13px;color:#fff;opacity:.85;text-shadow:0 1px 4px #000}
+#menuB,.slot{pointer-events:auto;position:fixed;top:calc(var(--top) + 52px);width:50px;height:50px;border-radius:14px;border:1px solid rgba(255,255,255,.25);background:rgba(20,10,44,.7);color:#fff;font-size:24px}
+#menuB{left:12px;font-size:20px}
+.slot{right:12px}#s_key{right:70px}#s_bank{right:128px}
+.slot.hand{border-color:#ffd24a;box-shadow:0 0 14px #ffd24a}
+#joy{position:fixed;left:18px;bottom:var(--bot);width:124px;height:124px;border-radius:50%;background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.25);touch-action:none}
+#knob{position:absolute;left:34px;top:34px;width:56px;height:56px;border-radius:50%;background:radial-gradient(#d8bcff,#7b3fe4);box-shadow:0 0 16px #a273ff;pointer-events:none}
+#act{position:fixed;right:18px;bottom:var(--bot);width:104px;height:104px;border-radius:50%;border:0;background:radial-gradient(#ffe29a,#e0a11e);color:#2a1a00;font:500 14px Rubik,sans-serif;box-shadow:0 0 22px #e0a11e;padding:6px;animation:pl 1.2s infinite}
+@keyframes pl{50%{transform:scale(1.07)}}
+.row{display:flex;gap:8px;width:min(78vw,300px)}
+input[type=number],input[type=text]{width:100%;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,.25);background:rgba(10,6,24,.8);color:#fff;font:17px Rubik,sans-serif;user-select:text;-webkit-user-select:text}
+label.s{display:flex;justify-content:space-between;align-items:center;width:min(78vw,300px);font-size:16px}
+#boot{background:#001b3d}
+.logo{display:grid;grid-template-columns:repeat(2,44px);gap:5px;transform:perspective(200px) rotateY(-12deg);animation:lp 1.6s infinite}
+.logo i{height:44px;background:#00a4ef}.logo i:nth-child(2){background:#7fba00}.logo i:nth-child(3){background:#ffb900}.logo i:nth-child(4){background:#f25022}
+@keyframes lp{50%{opacity:.6}}
+.spin{width:34px;height:34px;border-radius:50%;border:4px solid rgba(255,255,255,.2);border-top-color:#fff;animation:sp .9s linear infinite;margin-top:30px}
+@keyframes sp{to{transform:rotate(360deg)}}
+#boot.bios{background:#000}
+#bios,#codeLog{width:min(92vw,420px);height:62vh;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;font:13px/1.55 ui-monospace,Menlo,Consolas,monospace;color:#b9ffd9;text-align:left}
+#bios .bl{color:#fff;animation:bk 1s steps(2) infinite}
+@keyframes bk{50%{opacity:0}}
+#blogo{display:flex;flex-direction:column;align-items:center}
+#atmBody{width:min(92vw,340px)}
+.as{background:#06222a;border:2px solid #2aa6c8;border-radius:10px;padding:14px;min-height:110px;text-align:center;color:#7fe0ff;font:15px/1.5 ui-monospace,Menlo,Consolas,monospace}
+.ad{font-size:28px;letter-spacing:8px;min-height:36px;color:#fff}
+.ak{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.am{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.ak button,.am button{padding:14px;border-radius:10px;border:1px solid rgba(255,255,255,.25);background:rgba(34,20,70,.85);color:#fff;font:500 17px Rubik,sans-serif}
+.sl{height:16px;width:70%;margin:0 auto 8px;background:#0b0b10;border-radius:4px;position:relative;overflow:hidden;border:1px solid #333}
+.sl i{position:absolute;left:20%;width:60%;height:100%;background:linear-gradient(#ffd24a,#e0a11e);transform:translateY(-100%)}
+.sl i.in{transform:translateY(55%)}.sl i.cin{animation:ci 1.1s forwards}.sl i.cout{animation:co 1s forwards}
+@keyframes ci{from{transform:translateY(-100%)}to{transform:translateY(55%)}}
+@keyframes co{from{transform:translateY(55%)}to{transform:translateY(-10%)}}
+.bills{font-size:30px;animation:bu 1.2s ease-out}@keyframes bu{from{transform:translateY(24px);opacity:0}}
+.rc{background:#f4f1e4;color:#222;font:13px/1.6 ui-monospace,Menlo,Consolas,monospace;padding:12px;border-radius:4px;text-align:left;width:min(92vw,340px);animation:bu 1s ease-out}
+#tmLog{width:min(92vw,360px);height:38vh;overflow:auto;touch-action:pan-y;background:#000;color:#9fe;font:13px/1.5 ui-monospace,Menlo,Consolas,monospace;padding:8px;border-radius:8px;text-align:left;white-space:pre-wrap;user-select:text;-webkit-user-select:text}
+#gpList,#ctList{width:min(92vw,360px);display:flex;flex-direction:column;gap:6px;max-height:50vh;overflow:auto;touch-action:pan-y}
+.pt{display:flex;gap:6px;align-items:center;background:rgba(34,20,70,.7);padding:8px;border-radius:10px}.pt span{flex:1}
+.pt button{padding:8px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:rgba(60,40,120,.8);color:#fff}
+#ovGl,#ovFl,#ovHk,#ovLap{justify-content:flex-start;overflow-y:auto;touch-action:pan-y;padding-top:calc(24px + env(safe-area-inset-top,0px))}
+#ovGl .b,#ovFl .b,#ovHk .b{padding:11px}
+#s_glove{right:186px}#s_flash{right:12px;top:calc(var(--top) + 108px)}#s_lap{right:70px;top:calc(var(--top) + 108px)}
+#lapBody,#hsBody{width:min(92vw,340px)}
+.slot.hk{border-color:#3dff8a;box-shadow:0 0 12px #3dff8a}
+#sub.on{animation:fi .4s}
+@keyframes fi{from{opacity:0}}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div id="hud" hidden><div id="sub"></div><div id="hint"></div></div>
+<button id="menuB" hidden aria-label="Меню">☰</button>
+<button class="slot" id="s_card" hidden aria-label="Карта доступа">🪪</button>
+<button class="slot" id="s_key" hidden aria-label="Ключ">🗝️</button>
+<button class="slot" id="s_bank" hidden aria-label="Банковская карта">💳</button>
+<button class="slot" id="s_glove" hidden aria-label="Перчатка">🧤</button>
+<button class="slot" id="s_flash" hidden aria-label="Хакерская флешка">💾</button>
+<button class="slot" id="s_lap" hidden aria-label="Хакерский компьютер">💻</button>
+<div id="joy" hidden><div id="knob"></div></div>
+<button id="act" hidden></button>
+
+<div class="ov" id="ovMenu">
+  <h1 id="ttl">ПОРТАЛ ЛИСКИ</h1>
+  <p class="tag">Коснитесь экрана, чтобы включить звук</p>
+  <button class="b p" id="bNew">Новая игра</button>
+  <button class="b" id="bCont">Продолжить</button>
+  <button class="b" id="bSet">Настройки</button>
+  <button class="b" id="bExit">Выйти</button>
+</div>
+<div class="ov dark" id="ovSet" hidden>
+  <h2>Настройки</h2>
+  <label class="s">Громкость музыки <input type="range" id="rMus" min="0" max="1" step="0.05"></label>
+  <label class="s">Музыка <input type="checkbox" id="cMus"></label>
+  <label class="s">Звуки <input type="checkbox" id="cSfx"></label>
+  <label class="s">Голос <input type="checkbox" id="cVox"></label>
+  <button class="b" id="bReset">Сбросить прогресс</button>
+  <button class="b p" id="bBack">Назад</button>
+</div>
+<div class="ov" id="boot" hidden><div id="bios" hidden></div><div id="blogo" hidden><div class="logo"><i></i><i></i><i></i><i></i></div><div class="spin"></div><p>Портал OS загружается…</p></div></div>
+<div class="ov dark" id="ovMain" hidden><h2>Портал OS</h2><p class="tag">Главное меню</p><button class="b p" id="mnLogin">Вход в систему</button><button class="b" id="mnOff">Выключить компьютер</button></div>
+<div class="ov dark" id="ovCo" hidden>
+  <h2>Координаты телепорта</h2>
+  <div class="row"><input id="cx" type="number" placeholder="X"><input id="cy" type="number" placeholder="Y"><input id="cz" type="number" placeholder="Z"></div>
+  <p class="tag" id="coMsg"></p>
+  <button class="b" id="coOk">ОК</button>
+  <button class="b p" id="coSave" disabled>Сохранить координаты</button>
+  <button class="b" id="coX">Закрыть</button>
+</div>
+<div class="ov dark" id="ovW" hidden>
+  <h2>Выберите мир</h2>
+  <button class="b" data-w="forest">🌲 Лесной мир</button>
+  <button class="b" data-w="nether">🔥 Нижний мир</button>
+  <button class="b" data-w="the_end">🌌 Энд</button>
+  <button class="b" data-w="snow">❄️ Снежный мир</button>
+  <button class="b" data-w="ocean">🌊 Океанский мир</button>
+</div>
+<div class="ov" id="ovA" hidden>
+  <h2 id="anT"></h2>
+  <button class="b p" id="aTake">Забрать с собой</button>
+  <button class="b" id="aHome">Отправить домой через портал</button>
+  <button class="b" id="aFree">Освободить</button>
+  <button class="b" id="aX">Отмена</button>
+</div>
+<div class="ov dark" id="ovPw" hidden><h2>Пароль</h2><input id="pwIn" type="number" inputmode="numeric" placeholder="4 цифры" style="width:min(78vw,300px)"><p class="tag" id="pwMsg"></p><button class="b p" id="pwOk">Войти</button><button class="b" id="pwX">Закрыть</button></div>
+<div class="ov dark" id="ovPc" hidden><h2>Компьютер</h2><button class="b" id="pcCo">Изменить координаты</button><button class="b" id="pcOff">Выключить компьютер</button><button class="b" id="pcX">Закрыть</button></div>
+<div class="ov dark" id="ovPo" hidden><h2>Портал</h2><button class="b p" id="poGo">Старт</button><button class="b" id="poOff">Выключить</button><button class="b" id="poX">Закрыть</button></div>
+<div class="ov dark" id="ovAtm" hidden><h2>ФоксБанк: банкомат</h2><div id="atmBody"></div><button class="b" id="atmX">Выход (забрать карту)</button></div>
+<div class="ov dark" id="ovGl" hidden><h2 id="glT">Перчатка Лискас</h2><button class="b p" id="gTp">Телепорт по координатам</button><button class="b" id="gPts">Сохранённые точки</button><button class="b" id="gSave">Сохранить эту точку</button><button class="b" id="gBack">Вернуться</button><button class="b" id="gRem">Удалённое управление</button><button class="b" id="gTerm">Терминал</button><button class="b" id="gCt">Соединить контракт</button><button class="b" id="gDim">Карманное измерение</button><button class="b" id="gAn" hidden style="border-color:#3dff8a;color:#3dff8a">Управление антеннами</button><button class="b" id="gHm" hidden style="border-color:#3dff8a;color:#3dff8a">Управление домом</button><button class="b" id="gHack" hidden style="border-color:#3dff8a;color:#3dff8a">Хак-меню</button><button class="b" id="gX">Закрыть</button></div>
+<div class="ov dark" id="ovGt" hidden><h2>Телепорт</h2><div class="row"><input id="gtx" type="number" placeholder="X"><input id="gty" type="number" placeholder="Y"></div><p class="tag" id="gtMsg"></p><button class="b p" id="gtGo">Телепортироваться</button><button class="b" id="gtX">Назад</button></div>
+<div class="ov dark" id="ovGp" hidden><h2>Сохранённые точки</h2><div id="gpList"></div><button class="b" id="gpX">Назад</button></div>
+<div class="ov dark" id="ovGr" hidden><h2>Удалённое управление</h2><button class="b" id="rPc">Компьютер</button><button class="b" id="rPo">Портал</button><button class="b" id="rCo">Координаты портала</button><button class="b" id="rX">Назад</button></div>
+<div class="ov dark" id="ovTm" hidden><h2>Терминал</h2><div id="tmLog"></div><input id="tmIn" type="text" placeholder="команда, например help" style="width:min(92vw,360px)" autocapitalize="off" autocomplete="off"><button class="b p" id="tmRun">Выполнить</button><button class="b" id="tmX">Назад</button></div>
+<div class="ov dark" id="ovHk" hidden><h2 style="color:#3dff8a">Хак-меню (симуляция)</h2><button class="b" id="hkAtm">Взломать банкомат</button><button class="b" id="hkPo">Взломать портал</button><button class="b" id="hkScan">Сканер сети</button><button class="b" id="hkFast">Ускорение вкл/выкл</button><button class="b" id="hkGive">Выдать все предметы</button><button class="b" id="hkOff">Выключить хак-режим</button><button class="b" id="hkX">Назад</button></div>
+<div class="ov dark" id="ovCode" hidden><div id="codeLog"></div></div>
+<div class="ov dark" id="ovFl" hidden><h2 style="color:#3dff8a">Управление антеннами</h2><p class="tag" id="flSt"></p><button class="b" id="flConn">Подключиться к антенне</button><button class="b" id="flCap">Захватить всех роботов</button><button class="b" id="flRel">Освободить роботов</button><button class="b" id="flGat">Собрать роботов возле меня</button><button class="b" id="flDan">Заставить роботов танцевать</button><button class="b" id="flDes" style="border-color:#ff4d5e;color:#ff8a98">Уничтожить антенну и роботов</button><button class="b" id="flRes" style="border-color:#3dff8a;color:#3dff8a">Восстановить антенну</button><button class="b" id="flUnb">Снять привязку</button><button class="b" id="flX">Закрыть</button></div>
+<div class="ov dark" id="ovCt" hidden><h2>Соединить контракт</h2><p class="tag" id="ctSt"></p><div id="ctList"></div><button class="b" id="ctBrk" hidden>Разорвать контракт</button><button class="b" id="ctX">Назад</button></div>
+<div class="ov dark" id="ovLap" hidden><h2 style="color:#3dff8a">Хакерский компьютер</h2><div id="lapBody"></div><button class="b" id="lapX">Закрыть</button></div>
+<div class="ov dark" id="ovHs" hidden><h2>Дом</h2><div id="hsBody"></div></div>
+<div class="ov dark" id="ovFc" hidden><h2>Хакерская флешка</h2><button class="b p" id="fcHk">Привязать к хак-меню</button><button class="b" id="fcPc">Привязать к компьютеру</button><button class="b" id="fcX">Отмена</button></div>
+<div class="ov dark" id="ovHm" hidden><h2 style="color:#3dff8a">Управление домом</h2><div id="hmBody"></div><button class="b" id="hmX">Закрыть</button></div>
+<div class="ov dark" id="ovBye" hidden><h2>До встречи, Лиска</h2><button class="b" id="bBye">В меню</button></div>
+
+<script>
+(function(){
+var $=function(i){return document.getElementById(i)},cv=$("cv"),cx=cv.getContext("2d"),W0=0,H0=0,sc=1,DPR=Math.min(2,window.devicePixelRatio||1);
+function rs(){W0=innerWidth;H0=innerHeight;cv.width=W0*DPR;cv.height=H0*DPR;sc=Math.max(.8,W0/420)}
+addEventListener("resize",rs);rs();
+var ST={mv:.6,mus:1,sfx:1,vox:1},S=null;
+try{var s0=localStorage.getItem("liskas2s");if(s0)Object.assign(ST,JSON.parse(s0))}catch(e){}
+function loadS(){try{var r=localStorage.getItem("liskas2");return r?JSON.parse(r):null}catch(e){return null}}
+function save(){try{localStorage.setItem("liskas2",JSON.stringify(S))}catch(e){}}
+function saveSet(){try{localStorage.setItem("liskas2s",JSON.stringify(ST))}catch(e){}}
+var rnd=function(a,b){return a+Math.random()*(b-a)},dist=function(a,b,c,d){return Math.hypot(a-c,b-d)};
+var G={scene:"title",ui:false,x:320,y:330,jx:0,jy:0,kx:0,ky:0,fl:0,sh:0,rise:0,acting:false,at:0,mode:null,fy:0,dir:"out",world:"base",ww:640,wh:420,an:[],dec:[],home:0,t:0,nx:1,bolts:[],cur:null,bt:0,rb:[],sig:null,circ:0,boomed:false,siren:false,sirT:0,sirEnd:0};
+var TM={x:140,y:250},PD={x:500,y:250},PO={x:320,y:100};
+
+/* ---------- audio ---------- */
+var AC=null,MG=null,M=null;
+function ac(){
+  if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)();M=AC.createGain();M.connect(AC.destination);MG=AC.createGain();MG.gain.value=ST.mv*.5;MG.connect(AC.destination)}catch(e){}}
+  if(AC&&AC.state==="suspended")AC.resume();
+  return AC;
+}
+function tn(f1,f2,d,ty,v,dl,out){
+  if(!out&&!ST.sfx)return;var a=ac();if(!a)return;var t=a.currentTime+(dl||0),o=a.createOscillator(),g=a.createGain();
+  o.type=ty||"sine";o.frequency.setValueAtTime(f1,t);o.frequency.exponentialRampToValueAtTime(Math.max(f2,1),t+d);
+  g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(v||.2,t+Math.min(.05,d/3));g.gain.exponentialRampToValueAtTime(.0001,t+d);
+  o.connect(g);g.connect(out||M);o.start(t);o.stop(t+d+.05);
+}
+function nz(d,f1,f2,v){
+  if(!ST.sfx)return;var a=ac();if(!a)return;var t=a.currentTime,n=Math.floor(a.sampleRate*d),b=a.createBuffer(1,n,a.sampleRate),c=b.getChannelData(0),i;
+  for(i=0;i<n;i++)c[i]=Math.random()*2-1;
+  var s=a.createBufferSource();s.buffer=b;var f=a.createBiquadFilter();f.type="bandpass";f.Q.value=2;f.frequency.setValueAtTime(f1,t);f.frequency.exponentialRampToValueAtTime(f2,t+d);
+  var g=a.createGain();g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(v,t+d*.3);g.gain.exponentialRampToValueAtTime(.0001,t+d);
+  s.connect(f);f.connect(g);g.connect(M);s.start(t);
+}
+var SN={
+  click:function(){tn(600,900,.06,"sine",.12)},
+  err:function(){tn(220,150,.22,"sine",.1)},
+  ok:function(){tn(880,880,.15,"sine",.12);tn(1320,1320,.3,"sine",.12,.12)},
+  boot:function(){[392,523,659,784,1047].forEach(function(f,i){tn(f,f,.9,"sine",.1,i*.18)})},
+  thunder:function(){tn(70,30,1.8,"sine",.5);nz(1.6,400,60,.25)},
+  boom:function(){tn(55,35,2.5,"sine",.6);nz(1.2,2500,200,.2);[262,330,392,523,659,784].forEach(function(f,i){tn(f,f,.8,"sine",.08,.3+i*.2)})},
+  fly:function(){nz(2.2,200,3000,.14);tn(150,900,2.2,"sine",.12)},
+  arrive:function(){tn(130,40,.7,"sine",.5);[880,1320].forEach(function(f,i){tn(f,f,.5,"sine",.1,i*.12)})},
+  pet:function(){tn(784,784,.25,"sine",.1);tn(988,988,.35,"sine",.1,.12)}
+};
+var CH=[[220,261.6,329.6],[174.6,220,261.6],[261.6,329.6,392],[196,246.9,293.7]],mi=0,mt=null;
+function music(on){
+  clearInterval(mt);mt=null;if(!on||!ST.mus||!ac())return;
+  var step=function(){var c=CH[mi++%4];c.forEach(function(f,i){tn(f,f,2.6,"triangle",.5,i*.02,MG)});[0,1,2,1,2,1,0,2].forEach(function(n,i){tn(c[n]*2,c[n]*2,.5,"sine",.3,i*.3,MG)})};
+  step();mt=setInterval(step,2400);
+}
+var VOX=null;
+function pv(){var v=window.speechSynthesis?speechSynthesis.getVoices():[];VOX=v.filter(function(x){return /^ru/i.test(x.lang)})[0]||null}
+if(window.speechSynthesis){pv();speechSynthesis.onvoiceschanged=pv}
+function say(t){
+  var s=$("sub");s.textContent=t;s.classList.remove("on");void s.offsetWidth;s.classList.add("on");
+  if(!ST.vox||!window.speechSynthesis)return;
+  try{speechSynthesis.cancel();setTimeout(function(){var u=new SpeechSynthesisUtterance(t);u.lang="ru-RU";if(VOX)u.voice=VOX;speechSynthesis.speak(u)},80)}catch(e){}
+}
+
+/* ---------- worlds ---------- */
+var WD={
+ pocket:{bg:"#0d1030",ln:"#1a1d4a",d:"✨",ids:[],say:""},
+ forest:{bg:"#14391f",ln:"#1f5a30",d:"🌲",ids:["🐇 Заяц","🦌 Олень","🦊 Лиса","🦉 Сова","🐻 Медведь","🐿️ Белка"],say:"Лесной мир. Здесь живут звери. Подойдите к зверю и решите, что с ним делать."},
+ nether:{bg:"#3a0e0e",ln:"#6a1a12",d:"🌋",ids:["🐗 Хоглин","🦂 Скорпион","🦎 Ящерица","🐍 Змея","🦇 Летучая мышь","🐲 Дракончик"],say:"Нижний мир. Жарко, лава светится в темноте."},
+ the_end:{bg:"#0d0a1e",ln:"#2a2250",d:"💎",ids:["🐙 Осьминог","🦑 Кальмар","🦋 Мотылёк","🐺 Волк тени","🦄 Единорог","🐉 Дракон"],say:"Энд. Тихо и пусто, только кристаллы и странные существа."},
+ snow:{bg:"#cfe3f4",ln:"#a8c6e0",d:"🎄",ids:["🐧 Пингвин","🦊 Песец","🦌 Северный олень","🐻 Белый медведь","🦉 Полярная сова","🐇 Снежный заяц"],say:"Снежный мир. Тихо, падает снег."},
+ ocean:{bg:"#0b4a66",ln:"#1a7090",d:"🪸",ids:["🐠 Рыбка","🐢 Черепаха","🐬 Дельфин","🦀 Краб","🦈 Акула","🐳 Кит"],say:"Океанский мир. Вы на дне среди кораллов."}
+};
+var BASE={bg:"#1a1236",ln:"#2f2354"};
+function cur(){return G.world==="base"?BASE:WD[G.world]}
+function hideAll(){["ovMenu","ovSet","boot","ovCo","ovW","ovA","ovBye","ovPw","ovPc","ovPo","ovMain","ovAtm","ovGl","ovGt","ovGp","ovGr","ovTm","ovHk","ovCode","ovFl","ovCt","ovLap","ovHs","ovFc","ovHm"].forEach(function(i){$(i).hidden=true})}
+function showHud(on){["hud","menuB","joy"].forEach(function(i){$(i).hidden=!on});if(!on){$("act").hidden=true;$("s_card").hidden=true;$("s_key").hidden=true;$("s_bank").hidden=true;$("s_glove").hidden=true;$("s_flash").hidden=true;$("s_lap").hidden=true}}
+function inv(){if(!S)return;$("s_card").hidden=!S.card;$("s_key").hidden=!S.key;$("s_bank").hidden=!S.bank;$("s_glove").hidden=!S.glove;$("s_glove").classList.toggle("hand",S.hand==="glove");$("s_glove").classList.toggle("hk",!!S.hack);$("s_flash").hidden=!S.flash;$("s_flash").classList.toggle("hand",S.hand==="flash");$("s_lap").hidden=!S.laptop;$("s_lap").classList.toggle("hand",S.hand==="laptop");$("s_bank").classList.toggle("hand",S.hand==="bank");$("s_card").classList.toggle("hand",S.hand==="card");$("s_key").classList.toggle("hand",S.hand==="key")}
+function enterBase(first){
+  hideAll();G.scene="play";G.world="base";G.ww=640;G.wh=420;G.x=320;G.y=first?340:200;G.an=[];G.dec=[];G.ui=false;G.mode=null;G.acting=false;
+  G.rise=S.stage>=4?1:0;G.circ=G.rise;G.closing=false;G.rm=null;G.wp=null;spawnRobots();showHud(true);inv();music(true);
+  if(first)say("Лиска потеряла дорогу домой. Подойди к терминалу и включи его.");
+}
+function enterWorld(k){
+  var w=WD[k],i;G.world=k;G.ww=900;G.wh=640;G.x=450;G.y=570;G.ui=false;G.mode=null;G.home=0;G.dec=[];G.wp=null;G.rm=null;G.acting=false;G.closing=false;
+  for(i=0;i<46;i++)G.dec.push({x:rnd(30,870),y:rnd(150,600),s:rnd(26,42)});
+  G.an=w.ids.map(function(s){var p=s.split(" ");return{e:p[0],n:p.slice(1).join(" "),x:rnd(80,820),y:rnd(170,500),st:"wild",ph:rnd(0,9),vx:0}});
+  spawnRobots();SN.arrive();say(w.say);
+}
+function newGame(){S={stage:0,card:true,key:true,hand:null,dest:null,auth:0,run:false,pw:"2580",bank:true,bal:1000,cash:0,bonusT:0,glove:true,pts:[],hist:[],pin:"1234"};save();enterBase(true)}
+function cont(){S=loadS();if(!S)return newGame();S.auth=S.auth||0;S.run=!!S.run;S.pw="2580";if(S.bal===undefined){S.bal=1000;S.cash=0;S.bonusT=0}S.bank=true;S.glove=true;S.hack=!!S.hack;S.fast=false;S.ant=S.ant||{};S.pts=S.pts||[];S.hist=S.hist||[];S.pin=S.pin||"1234";if(S.stage>=4){S.stage=3;S.run=false;S.key=true}enterBase(false);say("С возвращением, Лиска.")}
+
+/* ---------- actions ---------- */
+function addBolt(x1,y1,x2,y2){var p=[[x1,y1]],i,n=9;for(i=1;i<n;i++){var t=i/n;p.push([x1+(x2-x1)*t+rnd(-26,26),y1+(y2-y1)*t])}p.push([x2,y2]);G.bolts.push({p:p,l:.2})}
+function boot(){
+  G.ui=true;var bt=$("boot"),bi=$("bios");bt.hidden=false;bt.className="ov bios";bi.hidden=false;bi.innerHTML="";$("blogo").hidden=true;
+  say("Включение компьютера.");tn(880,880,.18,"sine",.06);
+  var L=["PORTAL BIOS v2.6   (c) Fox Systems","CPU: FOX-X 3.2GHz ........ OK","Память: 640K ........ OK","Диск 0: PORTAL-DRV ........ OK","Поиск кольца портала ........ НАЙДЕНО","Проверка доступа ........ ОЖИДАЕТ КАРТУ","Загрузка ядра ........ OK","","BOOT TO START"],i=0;
+  function nx(){
+    if(i<L.length){bi.innerHTML+='<div'+(i===L.length-1?' class="bl"':'')+'>'+L[i]+'</div>';i++;tn(1500,1500,.02,"sine",.04);setTimeout(nx,i===L.length-1?900:380)}
+    else{bi.hidden=true;bt.className="ov";$("blogo").hidden=false;SN.boot();say("Система загружается.");
+      setTimeout(function(){bt.hidden=true;G.ui=true;$("ovMain").hidden=false;say("Главное меню.")},2800)}
+  }
+  setTimeout(nx,500);
+}
+function useCard(){
+  if(S.hand!=="card")return say("Возьмите карту в руку: нажмите на значок карты вверху справа.");
+  S.card=false;S.hand=null;S.auth=1;save();inv();SN.ok();G.fl=.4;say("Карта принята. Теперь нужен пароль.");setTimeout(openPw,2200);
+}
+function openPw(){G.ui=true;$("pwIn").value="";$("pwMsg").textContent="";$("ovPw").hidden=false}
+var AT={x:560,y:360},atm={step:"insert",buf:"",msg:"",tries:0,pend:0,id:0,op:"",opn:"",amt:0,np:""};
+SN.cash=function(){for(var i=0;i<6;i++)tn(1800+i*60,1800+i*60,.05,"sine",.06,i*.06);nz(.4,2000,800,.05)};
+SN.slide=function(){nz(.5,600,1800,.05);tn(400,200,.4,"sine",.04)};
+function hist(o,a){S.hist=S.hist||[];S.hist.push({t:new Date().toLocaleTimeString("ru-RU"),o:o,a:a});if(S.hist.length>5)S.hist.shift()}
+function aBusy(m,ms,fn){var id=atm.id;atm.step="busy";atm.msg=m;atmR();setTimeout(function(){if(atm.id===id&&!$("ovAtm").hidden)fn()},ms)}
+function openAtm(){
+  if(S.hand!=="bank")return say("Возьмите банковскую карту в руку (значок 💳 вверху) и приложите к банкомату.");
+  if(S.lockT&&Date.now()<S.lockT)return say("Карта заблокирована ещё на "+Math.ceil((S.lockT-Date.now())/1000)+" секунд.");
+  var id=++atm.id;atm.step="insert";atm.buf="";atm.msg="";atm.tries=0;atm.pend=0;G.ui=true;$("ovAtm").hidden=false;SN.slide();say("Вставьте карту в картоприёмник.");atmR();
+  setTimeout(function(){if(atm.id!==id)return;atm.step="read";atmR();setTimeout(function(){if(atm.id!==id)return;atm.step="pin";atm.buf="";atmR();say("Введите PIN-код.")},1400)},1200);
+}
+function atmEnd(){if(atm.pend){S.cash+=atm.pend;atm.pend=0}save();$("ovAtm").hidden=true;G.ui=false;atm.id++;SN.ok();say("Карта возвращена. Спасибо, что пользуетесь ФоксБанком.")}
+function sl(c){return'<div class="sl"><i class="'+c+'"></i></div>'}
+function pad(){var k="",i;for(i=1;i<=9;i++)k+='<button data-k="'+i+'">'+i+'</button>';return'<div class="ak">'+k+'<button data-k="C">C</button><button data-k="0">0</button><button data-k="OK">OK</button></div>'}
+function btns(r){return'<div class="am">'+r.map(function(x){return'<button '+x[0]+'>'+x[1]+'</button>'}).join("")+'</div>'}
+function atmR(){
+  var s=atm.step,h="",hd='<small>Карта: '+S.bal+' · Наличные: '+S.cash+'</small>',m=atm.msg?'<br><small>'+atm.msg+'</small>':"";
+  if(s==="insert")h=sl("cin")+'<div class="as">Вставьте карту…</div>';
+  else if(s==="read")h=sl("in")+'<div class="as">Чтение карты…<div class="spin" style="margin:12px auto 0"></div></div>';
+  else if(s==="busy")h='<div class="as">'+atm.msg+'<div class="spin" style="margin:12px auto 0"></div></div>';
+  else if(s==="pin")h='<div class="as">Введите PIN-код<div class="ad">'+"●".repeat(atm.buf.length)+'</div>'+m+'</div>'+pad();
+  else if(s==="menu")h='<div class="as">Выберите операцию<br>'+hd+m+'</div>'+btns([['data-a="wd"',"Снять наличные"],['data-a="dp"',"Пополнить карту"],['data-a="bal"',"Баланс"],['data-a="stm"',"Мини-выписка"],['data-a="np"',"Сменить PIN"],['data-a="card"',"Вернуть карту"]]);
+  else if(s==="wd")h='<div class="as">Снять наличные<br>'+hd+m+'</div>'+btns([['data-v="100"',"100"],['data-v="500"',"500"],['data-v="1000"',"1000"],['data-v="3000"',"3000"],['data-v="5000"',"5000"],['data-a="wdo"',"Другая сумма"],['data-a="menu"',"Назад"]]);
+  else if(s==="amt"||s==="np"||s==="np2")h='<div class="as">'+(s==="amt"?(atm.op==="wd"?"Введите сумму (кратно 100)":"Сколько внести (из наличных)"):s==="np"?"Новый PIN (4 цифры)":"Повторите новый PIN")+'<div class="ad">'+(s==="amt"?atm.buf:"●".repeat(atm.buf.length))+'</div>'+m+'</div>'+pad();
+  else if(s==="cash")h='<div class="as">Заберите наличные<div class="bills">💵💵💵</div></div>'+btns([['data-a="takecash"',"Забрать наличные"]]);
+  else if(s==="ask")h='<div class="as">Печатать чек?</div>'+btns([['data-a="rcy"',"Да"],['data-a="rcn"',"Нет"]]);
+  else if(s==="rc")h='<div class="rc">ФОКСБАНК<br>Банкомат №0451<br>'+new Date().toLocaleString("ru-RU")+'<br>Операция: '+atm.opn+'<br>Сумма: '+atm.amt+'<br>Баланс: '+S.bal+'</div>'+btns([['data-a="more"',"Далее"]]);
+  else if(s==="more")h='<div class="as">Продолжить работу?</div>'+btns([['data-a="menu"',"Да"],['data-a="card"',"Нет"]]);
+  else if(s==="bal")h='<div class="as">Баланс карты<div class="ad">'+S.bal+'</div>'+hd+'</div>'+btns([['data-a="menu"',"Назад"]]);
+  else if(s==="stm")h='<div class="as">Мини-выписка<br><small>'+((S.hist||[]).length?S.hist.slice().reverse().map(function(x){return x.t+" "+x.o+" "+(x.a>0?"+":"")+x.a}).join("<br>"):"Операций нет")+'</small></div>'+btns([['data-a="menu"',"Назад"]]);
+  else if(s==="card")h=sl("cout")+'<div class="as">Заберите карту'+m+'</div>'+btns([['data-a="takecard"',"Забрать карту"]]);
+  $("atmBody").innerHTML=h;
+}
+function fail(m,reset){atm.msg=m;atm.buf="";SN.err();if(reset)atm.step="np"}
+function doWd(n){
+  if(n>20000){atm.msg="Лимит 20000 за операцию";atm.step="wd";SN.err();atmR();return}
+  atm.opn="Снятие";atm.amt=n;
+  aBusy("Обработка запроса…",1300,function(){
+    if(S.bal<n){atm.step="menu";atm.msg="Недостаточно средств";SN.err();atmR();return}
+    S.bal-=n;hist("Снятие",-n);save();atm.pend=n;
+    aBusy("Пересчёт купюр…",1300,function(){atm.step="cash";SN.cash();atmR();say("Заберите наличные.")});
+  });
+}
+function doDp(n){
+  atm.opn="Пополнение";atm.amt=n;
+  if(S.cash<n){atm.msg="Недостаточно наличных";atm.buf="";SN.err();return}
+  aBusy("Приём купюр…",1500,function(){S.cash-=n;S.bal+=n;hist("Пополнение",n);save();SN.cash();atm.step="ask";atm.msg="";atmR()});
+}
+function kOk(){
+  var s=atm.step,b=atm.buf;atm.msg="";
+  if(s==="pin"){
+    if(b===(S.pin||"1234")){SN.ok();atm.step="menu";atm.buf=""}
+    else{atm.tries++;atm.buf="";SN.err();if(atm.tries>=3){S.lockT=Date.now()+20000;save();atm.step="card";atm.msg="PIN введён неверно 3 раза. Карта заблокирована на 20 секунд."}else atm.msg="Неверный PIN. Осталось попыток: "+(3-atm.tries)}
+  }else if(s==="amt"){
+    var n=parseInt(b,10);
+    if(!n||n%100)return fail("Сумма должна быть кратна 100");
+    if(atm.op==="wd")doWd(n);else doDp(n);
+  }else if(s==="np"){if(b.length<4)return fail("PIN из 4 цифр");atm.np=b;atm.buf="";atm.step="np2";SN.click()}
+  else if(s==="np2"){if(b!==atm.np)return fail("PIN не совпал, начните заново",true);S.pin=b;save();atm.buf="";atm.step="menu";atm.msg="PIN изменён";SN.ok()}
+}
+function atmA(a){
+  SN.click();atm.msg="";
+  if(a==="wd")atm.step="wd";
+  else if(a==="wdo"){atm.step="amt";atm.op="wd";atm.buf=""}
+  else if(a==="dp"){atm.step="amt";atm.op="dp";atm.buf=""}
+  else if(a==="bal")atm.step="bal";
+  else if(a==="stm")atm.step="stm";
+  else if(a==="np"){atm.step="np";atm.buf=""}
+  else if(a==="menu")atm.step="menu";
+  else if(a==="card"){atm.step="card";SN.slide()}
+  else if(a==="takecash"){S.cash+=atm.pend;atm.pend=0;save();SN.cash();atm.step="ask"}
+  else if(a==="rcy")return aBusy("Печать чека…",1200,function(){atm.step="rc";SN.slide();atmR()});
+  else if(a==="rcn"||a==="more")atm.step="more";
+  else if(a==="takecard")return atmEnd();
+  atmR();
+}
+$("atmBody").onclick=function(e){
+  var t=e.target,k=t.getAttribute("data-k"),a=t.getAttribute("data-a"),v=t.getAttribute("data-v"),s=atm.step;
+  if(k!==null){
+    atm.msg="";
+    if(k==="C")atm.buf="";
+    else if(k==="OK")kOk();
+    else if(atm.buf.length<(s==="amt"?6:4)){atm.buf+=k;SN.click()}
+    atmR();return;
+  }
+  if(a!==null)atmA(a);else if(v!==null)doWd(+v);
+};
+$("atmX").onclick=atmEnd;
+var NM={base:"База",pocket:"Карманное измерение",forest:"Лесной мир",nether:"Нижний мир",the_end:"Энд",snow:"Снежный мир",ocean:"Океанский мир"},GL=["ovGl","ovGt","ovGp","ovGr","ovTm","ovHk","ovFl","ovCt","ovHm"];
+function esc(t){return String(t).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function glShow(id){GL.forEach(function(i){$(i).hidden=i!==id});G.ui=true}
+function glEnd(){GL.forEach(function(i){$(i).hidden=true});G.ui=false}
+function openGlove(){glShow("ovGl");$("gHack").hidden=!S.hack;$("gAn").hidden=!(S.ctl&&S.hack);$("gHm").hidden=!S.houseCtl;$("gDim").textContent=G.world==="pocket"?"Выйти из измерения":"Карманное измерение";$("glT").textContent=S.hack?"Хакерская перчатка":"Перчатка Лискас";say(S.hack?"Хакерская перчатка активна. Что взломаем? Это симуляция.":"Добро пожаловать. Чем я могу вам помочь?");SN.ok()}
+function homeXY(){return G.world==="base"?[320,340]:G.world==="pocket"?[320,190]:[450,570]}
+function tpTo(x,y){S.back={w:G.world,x:G.x,y:G.y};G.x=Math.max(22,Math.min(G.ww-22,x));G.y=Math.max(40,Math.min(G.wh-22,y));G.fl=.8;G.sh=.4;SN.arrive();save()}
+function savePt(n){S.pts.push({n:n||"Точка "+(S.pts.length+1),w:G.world,x:Math.round(G.x),y:Math.round(G.y)});save();SN.ok()}
+function ptsR(){var h="";S.pts.forEach(function(p,i){h+='<div class="pt"><span>'+esc(p.n)+'<br><small>'+NM[p.w]+' · '+p.x+', '+p.y+'</small></span><button data-go="'+i+'">→</button><button data-del="'+i+'">✕</button></div>'});$("gpList").innerHTML=h||'<p class="tag">Точек нет. Нажмите «Сохранить эту точку».</p>'}
+function goPt(p){if(p.w!==G.world){SN.err();return say("Эта точка в другом мире.")}tpTo(p.x,p.y);say("Телепорт в точку «"+p.n+"».")}
+function goBack(){if(S.back&&S.back.w===G.world){tpTo(S.back.x,S.back.y);say("Вы вернулись на прошлое место.")}else{SN.err();say("Возвращаться некуда.")}}
+function tout(t){var l=$("tmLog");l.innerHTML+=esc(t)+"\n";l.scrollTop=l.scrollHeight}
+function trun(){
+  if(G.tmBusy)return;var raw=$("tmIn").value.trim();if(!raw)return;$("tmIn").value="";tout("> "+raw);
+  var a=raw.split(/\s+/),c=a[0].toLowerCase(),r=a.slice(1).join(" ");
+  if(c==="help")tout("help, pos, tp X Y, home, back, save ИМЯ, points, goto ИМЯ, del ИМЯ, bal, status, clear, admin"+(S.hack?"\nroot: scan, hack atm, hack portal, speed, give, flash, laptop, root off":""));
+  else if(c==="pos")tout(NM[G.world]+": x="+Math.round(G.x)+" y="+Math.round(G.y));
+  else if(c==="tp"){var x=+a[1],y=+a[2];if(a.length<3||isNaN(x)||isNaN(y))tout("Использование: tp X Y");else{tpTo(x,y);tout("Телепорт выполнен.")}}
+  else if(c==="home"){var h=homeXY();tpTo(h[0],h[1]);tout("Вы у точки входа.")}
+  else if(c==="back"){if(S.back&&S.back.w===G.world){tpTo(S.back.x,S.back.y);tout("Возврат выполнен.")}else tout("Возвращаться некуда.")}
+  else if(c==="save"){savePt(r);tout("Точка сохранена.")}
+  else if(c==="points")tout(S.pts.length?S.pts.map(function(p,i){return(i+1)+". "+p.n+" ("+NM[p.w]+" "+p.x+","+p.y+")"}).join("\n"):"Точек нет.");
+  else if(c==="goto"||c==="del"){
+    var i=S.pts.findIndex(function(p){return p.n.toLowerCase()===r.toLowerCase()});
+    if(i<0)tout("Точка не найдена.");
+    else if(c==="goto"){var p=S.pts[i];if(p.w!==G.world)tout("Точка в другом мире.");else{tpTo(p.x,p.y);tout("Готово.")}}
+    else{S.pts.splice(i,1);save();tout("Точка удалена.")}
+  }
+  else if(c==="bal")tout("Карта: "+S.bal+", наличные: "+S.cash);
+  else if(c==="status")tout("Компьютер: "+(S.stage?"включён":"выключен")+"; портал: "+(S.stage>=4?(S.run?"запущен":"открыт"):"закрыт"));
+  else if(c==="clear")$("tmLog").innerHTML="";
+  else if(c==="admin")adminSeq();
+  else if(c==="flash")flashSeq();
+  else if(c==="laptop"||c==="компьютер")lapSeq();
+  else if(c==="scan"||c==="speed"||c==="give"||c==="hack"||c==="root"){
+    if(!S.hack)tout("Нужны права администратора. Введите admin.");
+    else if(c==="scan")scanOut();
+    else if(c==="speed")toggleFast();
+    else if(c==="give")giveAll();
+    else if(c==="root"&&r==="off")rootOff();
+    else if(c==="hack"&&r==="atm")hackAtm();
+    else if(c==="hack"&&r==="portal")hackPortal();
+    else tout("Использование: scan, hack atm, hack portal, speed, give, root off");
+  }
+  else tout("Неизвестная команда. Введите help.");
+}
+function msg(t){say(t);if(!$("ovTm").hidden)tout(t)}
+function adminSeq(){
+  if(S.hack)return tout("Права администратора уже получены.");
+  G.tmBusy=true;
+  var st=["Подключение к ядру ПОРТАЛ OS","Обход защиты (симуляция)","Загрузка модуля HACK.GLOVE","Получение прав ROOT"],i=0,n=0;
+  var CODE=["void patch(Portal* p){","  p->lock = 0x00;","  for(int i=0;i<64;i++) mem[i]^=0xA7;","  if(auth(KEY)==OK) return GRANT;","}","0x7F45 4C46 0201 0100 DEAD BEEF","sudo ./inject --target=portal.sys","> decrypt ...... ok","[ OK ] hook installed @0x"];
+  function done(){
+    S.hack=true;save();inv();G.fl=.6;G.sh=.5;SN.boom();
+    tout("ДОСТУП ROOT ПОЛУЧЕН.\nПерчатка обновлена: ХАКЕРСКАЯ.\nВведите help, чтобы увидеть новые команды.");
+    say("Доступ администратора получен. Перчатка стала хакерской. Это симуляция.");G.tmBusy=false;
+  }
+  function tick(){
+    if(i>=4)return done();
+    if(n===0){tout("["+(i+1)+"/4] "+st[i]+"…");G.fl=.2}
+    var c=CODE[Math.floor(Math.random()*CODE.length)];tout(c.indexOf("@0x")>0?c+Math.floor(Math.random()*65535).toString(16):c);
+    tn(1400+Math.random()*500,1400,.02,"sine",.04);n++;
+    if(n>=7){tout("[##########] 100%");n=0;i++;setTimeout(tick,500)}else setTimeout(tick,130);
+  }
+  tick();
+}
+function scanOut(){["Сканирование сети…","192.168.0.2  КОМПЬЮТЕР ЛИСКИ  открыт","192.168.0.9  БАНКОМАТ ФОКСБАНК  порт 4451","10.0.0.1  ПОРТАЛ.SYS  защита: ключ","10.0.0.7  ПУЛЬТ  спит","Найдено устройств: 4 (симуляция)"].forEach(function(l,i){setTimeout(function(){tout(l);tn(1200,1200,.02,"sine",.04)},i*260)})}
+function hackAtm(){msg("Взлом банкомата… (симуляция)");G.fl=.4;SN.boot();setTimeout(function(){S.bal+=10000;save();SN.cash();msg("Готово: на карту добавлено 10000 монет. Это только игра.")},2000)}
+function hackPortal(){
+  if(G.world==="base"){S.stage=4;S.run=true;S.dest=S.dest||{x:0,y:64,z:2};S.key=false;S.hand=S.hand==="key"?null:S.hand;G.rise=1;G.circ=1;G.closing=false;G.acting=false;save();inv();msg("Портал открыт взломом. Войдите в кольцо.")}
+  else{if(!G.wp)G.wp=far();G.wp.on=true;G.wp.rise=1;G.rm=null;msg("Портал домой открыт взломом. Идите по стрелке.")}
+  G.fl=.5;SN.boom();
+}
+function toggleFast(){S.fast=!S.fast;msg("Ускорение "+(S.fast?"включено":"выключено")+".");SN.ok()}
+function giveAll(){S.card=true;S.key=true;S.bank=true;S.glove=true;save();inv();msg("Все предметы выданы.");SN.ok()}
+function rootOff(){S.hack=false;S.fast=false;save();inv();msg("Хакерский режим выключен. Перчатка снова обычная.");SN.click()}
+$("gCt").onclick=function(){SN.click();openCt()};
+$("gDim").onclick=function(){SN.click();pocketGo()};
+$("gAn").onclick=function(){SN.click();openFlash()};
+$("flConn").onclick=function(){
+  var a=antS();flClose();
+  if(a.st==="hacked")return say("Антенна уже взломана.");
+  if(a.st==="destroyed")return say("Антенна уничтожена. Сначала восстановите её.");
+  if(a.st==="linked")return say("Взлом уже идёт, подождите.");
+  if(dist(G.x,G.y,ANT().x,ANT().y)>=100)return say("Подойдите ближе к антенне и подключитесь снова.");
+  linkFlash();
+};
+$("flUnb").onclick=function(){S.ctl=false;S.flash=true;S.hand=null;save();inv();flClose();SN.click();say("Привязка снята. Флешка вернулась в инвентарь.")};
+$("ctList").onclick=function(e){
+  var c=e.target.getAttribute("data-c");if(c===null)return;var a=G.ctc[+c];if(!a)return;
+  S.contract={e:a.e,n:a.n};a.st="bound";G.cp=null;save();glEnd();SN.pet();G.fl=.5;
+  say("Контракт заключён. "+a.n+" теперь привязан к вам. Скоро у зверя появятся особые способности.");
+};
+$("ctBrk").onclick=function(){var n=S.contract?S.contract.n:"";S.contract=null;G.cp=null;save();glEnd();SN.click();say("Контракт с "+n+" разорван.")};
+$("ctX").onclick=function(){SN.click();glShow("ovGl")};
+$("gHack").onclick=function(){SN.click();glShow("ovHk")};
+$("hkAtm").onclick=function(){glEnd();hackAtm()};
+$("hkPo").onclick=function(){glEnd();hackPortal()};
+$("hkScan").onclick=function(){glShow("ovTm");scanOut()};
+$("hkFast").onclick=function(){toggleFast()};
+$("hkGive").onclick=function(){giveAll()};
+$("hkOff").onclick=function(){glEnd();rootOff()};
+$("hkX").onclick=function(){SN.click();glShow("ovGl")};
+$("gTp").onclick=function(){SN.click();$("gtMsg").textContent="";glShow("ovGt")};
+$("gtGo").onclick=function(){var x=$("gtx").value,y=$("gty").value;if(x===""||y===""||isNaN(+x)||isNaN(+y)){SN.err();$("gtMsg").textContent="Введите числа в оба поля";return}glEnd();tpTo(+x,+y);say("Телепорт выполнен.")};
+$("gtX").onclick=function(){SN.click();glShow("ovGl")};
+$("gPts").onclick=function(){SN.click();ptsR();glShow("ovGp")};
+$("gpX").onclick=function(){SN.click();glShow("ovGl")};
+$("gpList").onclick=function(e){var g=e.target.getAttribute("data-go"),d=e.target.getAttribute("data-del");if(g!==null){glEnd();goPt(S.pts[+g])}else if(d!==null){S.pts.splice(+d,1);save();SN.click();ptsR()}};
+$("gSave").onclick=function(){glEnd();savePt();say("Точка сохранена.")};
+$("gBack").onclick=function(){glEnd();goBack()};
+$("gRem").onclick=function(){SN.click();glShow("ovGr")};
+$("rX").onclick=function(){SN.click();glShow("ovGl")};
+$("rPc").onclick=function(){glEnd();if(S.stage===0)boot();else if(S.stage>=3)openPc();else say("Компьютер сейчас занят входом: подойдите к нему.")};
+$("rPo").onclick=function(){glEnd();if(S.stage>=4)openPo();else say("Портал сейчас не активен.")};
+$("rCo").onclick=function(){glEnd();if(S.stage===3)openCo();else say("Координаты можно менять, когда портал закрыт и компьютер включён.")};
+$("gTerm").onclick=function(){SN.click();glShow("ovTm");if(!$("tmLog").innerHTML)tout("ПОРТАЛ OS терминал. Введите help.")};
+$("tmRun").onclick=trun;
+$("tmIn").addEventListener("keydown",function(e){if(e.key==="Enter")trun()});
+$("tmX").onclick=function(){SN.click();glShow("ovGl")};
+$("gX").onclick=function(){glEnd();SN.click()};
+var THOUGHTS=["Можно просто сидеть и ни о чём не думать.","Звёзды тут никогда не гаснут.","Дорога домой найдётся. Сначала отдых.","Тихо. Только костёр потрескивает.","Хорошо, что есть место, где никто не торопит."];
+SN.fire=function(){nz(1.2,500,1800,.06);tn(120,100,.8,"sine",.05)};
+function rest(){SN.fire();G.fl=.12;say("Вы сидите у костра. Тепло и спокойно. "+THOUGHTS[Math.floor(Math.random()*THOUGHTS.length)])}
+function think(){SN.click();say(THOUGHTS[Math.floor(Math.random()*THOUGHTS.length)])}
+function pocketGo(){
+  glEnd();if(G.pp)return;
+  G.pp={x:G.x+90>G.ww-40?G.x-90:G.x+90,y:G.y,rise:0,t:0,dir:G.world==="pocket"?"pback":"pocket"};
+  SN.boom();G.fl=.4;say(G.world==="pocket"?"Портал обратно открывается.":"Возле вас открывается портал в карманное измерение.");
+}
+function enterPocket(){
+  G.stash={world:G.world,ww:G.ww,wh:G.wh,an:G.an,dec:G.dec,rb:G.rb,x:G.x,y:G.y,wp:G.wp};
+  G.world="pocket";G.ww=640;G.wh=420;G.x=320;G.y=190;G.an=[];G.rb=[];G.wp=null;G.rm=null;G.sig=null;G.cp=null;G.sw=false;G.ui=false;G.mode=null;
+  G.dec=[];for(var i=0;i<40;i++)G.dec.push({x:rnd(10,630),y:rnd(10,200),s:rnd(8,16)});
+  G.fl=1;SN.arrive();say("Карманное измерение. Здесь можно отдохнуть: посидеть у костра, подумать на скамье или поплавать в пруду.");
+}
+function leavePocket(){
+  var o=G.stash;if(!o)return enterBase(false);
+  G.world=o.world;G.ww=o.ww;G.wh=o.wh;G.an=o.an;G.dec=o.dec;G.rb=o.rb;G.wp=o.wp;G.x=o.x;G.y=o.y;G.stash=null;G.cp=null;G.sw=false;G.ui=false;G.mode=null;
+  G.fl=1;SN.arrive();say("Вы вернулись из карманного измерения.");
+}
+function openCt(){
+  var cand=G.an.filter(function(a){return a.st==="wild"||a.st==="taken"}),h="";
+  $("ctSt").textContent=S.contract?"Контракт с: "+S.contract.e+" "+S.contract.n:"Выберите зверя, с которым хотите соединить контракт.";
+  cand.forEach(function(a,i){h+='<div class="pt"><span>'+a.e+' '+esc(a.n)+'</span><button data-c="'+i+'">Выбрать</button></div>'});
+  $("ctList").innerHTML=h||'<p class="tag">В этом мире нет свободных зверей. Зверей можно найти в мирах за порталом.</p>';
+  $("ctBrk").hidden=!S.contract;G.ctc=cand;glShow("ovCt");
+}
+SN.charge=function(){tn(90,700,1.6,"sine",.14);nz(1.6,200,2400,.08)};
+var hsStep="in",lapStep="login",lapMsg="";
+function lapSeq(){
+  if(!S.hack)return tout("Нужны права администратора. Введите admin.");
+  if(S.laptop||S.lap)return tout("Хакерский компьютер уже получен.");
+  G.tmBusy=true;var n=0;tout("Сборка HACK.LAPTOP…");
+  (function t(){
+    if(n>=14){S.laptop=true;save();inv();G.fl=.5;SN.ok();tout("УСПЕШНО ВЫДАН: хакерский компьютер 💻");say("Успешно выдан хакерский компьютер.");G.tmBusy=false;return}
+    tout(CODEL[Math.floor(Math.random()*CODEL.length)]);tn(1400,1400,.02,"sine",.04);n++;setTimeout(t,120)
+  })();
+}
+function placeLap(){
+  S.lap={w:G.world,x:Math.round(G.x),y:Math.min(G.wh-20,Math.round(G.y)+34)};S.laptop=false;S.hand=null;save();inv();G.fl=.4;SN.ok();
+  say("Хакерский компьютер установлен. Он останется здесь навсегда.");
+}
+function openFlashChoice(){G.ui=true;$("ovFc").hidden=false;say("Куда привязать флешку?")}
+function openLap(){
+  codeScreen("Хакерский компьютер запускается…",1800,function(){lapStep="login";lapMsg="";G.ui=true;$("ovLap").hidden=false;lapR()});
+}
+function lapR(){
+  var inW=G.world!=="base"&&G.world!=="pocket",h=inW?hs():{},b="",m=lapMsg?'<br><small>'+lapMsg+'</small>':"",r=[];
+  if(lapStep==="login")b='<div class="as">ХАК-ОС 1.0<br><small>Пользователь: Лиска</small></div>'+btns([['data-a="login"',"Войти"],['data-a="off"',"Выключить ноутбук"]]);
+  else{
+    if(S.hand==="flash"&&!S.pcBound)r.push(['data-a="bind"',"Привязать флешку"]);
+    r.push(['data-a="cap"',"Захватить роботов"],['data-a="rel"',"Освободить роботов"]);
+    if(inW){
+      r.push(['data-a="doors"',h.doors==="locked"?"Открыть двери дома":"Заблокировать двери"],['data-a="alarm"',h.alarm==="armed"?"Отключить сигнализацию":"Включить сигнализацию"]);
+      if(h.hacked)r.push(['data-a="light"',h.lights?"Выключить свет":"Включить свет"],['data-a="siren"',"Сирена (тест)"]);
+      r.push(['data-a="srvs"',"Статус сервера"]);if(h.bound)r.push(['data-a="hm"',"Управление домом"]);
+    }
+    if(S.pcBound)r.push(['data-a="unb"',"Снять привязку флешки"]);
+    r.push(['data-a="off"',"Выключить ноутбук"]);
+    b='<div class="as">ХАК-ОС 1.0<br><small>Флешка: '+(S.pcBound?"привязана":"не привязана")+' · Мир: '+NM[G.world]+'</small>'+m+'</div>'+btns(r);
+  }
+  $("lapBody").innerHTML=b;
+}
+function lapA(a){
+  var inW=G.world!=="base"&&G.world!=="pocket",h=inW?hs():{};SN.click();lapMsg="";
+  if(a==="login")lapStep="dash";
+  else if(a==="off"){$("ovLap").hidden=true;G.ui=false;say("Ноутбук выключен.");return}
+  else if(a==="bind"){
+    $("ovLap").hidden=true;
+    return codeScreen("Привязка флешки к компьютеру…",2400,function(){S.flash=false;S.pcBound=true;S.hand=null;S.flashMode=null;save();inv();lapMsg="Флешка привязана. Открыт доступ к серверам.";G.ui=true;$("ovLap").hidden=false;lapR();say("Флешка привязана к компьютеру.")});
+  }
+  else if(a==="cap"||a==="rel"){
+    if(G.world==="pocket")lapMsg="В этом измерении нет роботов.";
+    else if(!S.pcBound&&antS().st!=="hacked"){lapMsg="Нужна привязанная флешка или взломанная антенна.";SN.err()}
+    else if(a==="cap"){G.sig={x:S.lap.x,y:S.lap.y,r:0,kind:"cap"};SN.fly();lapMsg="Сигнал отправлен. Глаза роботов горят зелёным."}
+    else{G.rb.forEach(function(r){r.ctrl=false});lapMsg="Роботы освобождены. Глаза голубые."}
+  }
+  else if(a==="doors"){h.doors=h.doors==="locked"?"open":"locked";save();lapMsg=h.doors==="locked"?"Все двери дома заблокированы.":"Двери открыты.";SN.ok()}
+  else if(a==="alarm"){
+    if(!S.pcBound&&!h.hacked){lapMsg="Нужна привязанная флешка или взломанный сервер.";SN.err()}
+    else{h.alarm=h.alarm==="armed"?"off":"armed";if(h.alarm==="off")G.siren=false;save();lapMsg=h.alarm==="armed"?"Сигнализация включена.":"Сигнализация отключена.";SN.ok()}
+  }
+  else if(a==="light"){h.lights=!h.lights;save();lapMsg=h.lights?"Свет включён.":"Свет выключен."}
+  else if(a==="siren"){G.siren=true;G.sirT=0;G.sirEnd=5;lapMsg="Сирена включена на 5 секунд."}
+  else if(a==="srvs")lapMsg="Сервер: "+(h.hacked?"взломан":"защищён")+". Людей внутри: 3. Двери: "+(h.doors==="locked"?"заперты":"открыты")+". Сигнализация: "+(h.alarm==="armed"?"включена":"отключена");
+  else if(a==="hm"){$("ovLap").hidden=true;G.ui=false;openHm();return}
+  else if(a==="unb"){S.pcBound=false;S.flash=true;save();inv();lapMsg="Привязка снята. Флешка вернулась в инвентарь."}
+  lapR();
+}
+function enterHouse(){
+  var h=hs();
+  if(h.doors==="locked"){SN.err();return say("Двери заблокированы. Откройте их с хакерского компьютера.")}
+  G.ui=true;hsStep="in";$("ovHs").hidden=false;
+  if(alarmOn(h)){G.siren=true;G.sirT=0;G.sirEnd=20;say("Сработала сигнализация!")}else say(h.alarm==="armed"&&!h.hacked?"Сигнализация молчит: флешка её отключает.":"Вы вошли в дом.");
+  hsR();
+}
+function hsR(){
+  var h=hs(),b;
+  if(hsStep==="in"){
+    var pp=G.siren?"😱 😱 😱":h.lights?"🧑‍💻 🧑‍💼 🧑‍🔬":"🌑 🌑 🌑";
+    b='<div class="as">Внутри дома<div class="ad">'+pp+'</div><small>'+(G.siren?"Люди вскочили: «Тревога!»":h.lights?"Три человека сидят за столами и работают.":"Свет выключен, люди сидят в темноте.")+'</small></div>'+btns([['data-a="srv"',"Пройти в серверную"],['data-a="out"',"Выйти"]]);
+  }else b='<div class="as">Серверная<div class="ad">🖥️ 🖥️ 🖥️</div><small>'+(h.bound?"Флешка привязана к серверу. Управление домом есть в перчатке и на компьютере.":h.hacked?"Сервер взломан: вся система дома под вашим контролем.":"Нужна хакерская флешка: в руке или привязанная к компьютеру или хак-меню.")+'</small></div>'+btns([['data-a="plug"',"Подключить флешку"],['data-a="hbind"',"Привязать флешку к серверу"],['data-a="back"',"Назад"]]);
+  $("hsBody").innerHTML=b;
+}
+function hsA(a){
+  var h=hs();SN.click();
+  if(a==="srv")hsStep="srv";
+  else if(a==="back")hsStep="in";
+  else if(a==="out"){$("ovHs").hidden=true;G.ui=false;say("Вы вышли из дома.");return}
+  else if(a==="hbind"){
+    if(h.bound){say("Флешка уже привязана к серверу.");return}
+    if(S.hand!=="flash"&&!S.pcBound&&!S.ctl){SN.err();say("Нужна хакерская флешка: возьмите её в руку или привяжите к компьютеру или к хак-меню.");return}
+    var inHand=S.hand==="flash";$("ovHs").hidden=true;
+    return codeScreen("Привязка флешки к серверу дома…",2400,function(){
+      if(inHand){S.flash=false;S.hand=null}
+      h.bound=true;h.hacked=true;h.alarm="off";G.siren=false;S.houseCtl=true;save();inv();G.sh=.6;G.fl=.6;SN.boom();
+      hsStep="srv";G.ui=true;$("ovHs").hidden=false;hsR();say("Флешка привязана к серверу. Сигнализация отключена. В перчатке и на компьютере появилась кнопка «Управление домом».");
+    });
+  }
+  else if(a==="plug"){
+    if(S.hand!=="flash"&&!S.pcBound&&!S.ctl){SN.err();say("Нужна хакерская флешка: возьмите её в руку или привяжите к компьютеру или к хак-меню.");return}
+    $("ovHs").hidden=true;
+    return codeScreen("Подключение флешки к серверу дома…",2600,function(){
+      h.hacked=true;h.alarm="off";h.lights=false;G.siren=false;save();G.sh=.8;G.fl=.8;SN.boom();
+      hsStep="srv";G.ui=true;$("ovHs").hidden=false;hsR();say("Сервер взломан. Сигнализация отключена, свет погас. Дом под вашим контролем.");
+    });
+  }
+  hsR();
+}
+$("lapBody").onclick=function(e){var a=e.target.getAttribute("data-a");if(a!==null)lapA(a)};
+$("hsBody").onclick=function(e){var a=e.target.getAttribute("data-a");if(a!==null)hsA(a)};
+$("lapX").onclick=function(){$("ovLap").hidden=true;G.ui=false;SN.click()};
+$("fcHk").onclick=function(){$("ovFc").hidden=true;G.ui=false;bindFlash()};
+$("fcPc").onclick=function(){
+  $("ovFc").hidden=true;G.ui=false;SN.click();
+  if(!S.lap)return say("Сначала получите и поставьте хакерский компьютер: команда laptop в терминале.");
+  S.flashMode="pc";save();say("Подойдите к хакерскому компьютеру с флешкой в руке, нажмите «Вставить флешку», затем «Войти» и «Привязать флешку».");
+};
+$("fcX").onclick=function(){$("ovFc").hidden=true;G.ui=false};
+function alarmOn(h){return h.alarm==="armed"&&!h.hacked&&!h.bound&&!S.pcBound&&!S.ctl}
+function openHm(){
+  if(G.world==="base"||G.world==="pocket")return say("В этом мире нет дома. Откройте управление в мире, где вы привязали сервер.");
+  if(!hs().bound)return say("Дом в этом мире не привязан. Привяжите флешку к серверу в серверной.");
+  lapMsg="";glShow("ovHm");hmR();say("Управление домом.");
+}
+function hmR(){
+  var h=hs(),m=lapMsg?'<br><small>'+lapMsg+'</small>':"";
+  $("hmBody").innerHTML='<div class="as">Дом · '+NM[G.world]+'<br><small>Двери: '+(h.doors==="locked"?"заперты":"открыты")+' · Сигнализация: '+(h.alarm==="armed"?"вкл":"выкл")+' · Свет: '+(h.lights?"вкл":"выкл")+'</small>'+m+'</div>'+btns([['data-a="doors"',h.doors==="locked"?"Открыть все двери":"Заблокировать все двери"],['data-a="alarm"',h.alarm==="armed"?"Отключить сигнализацию":"Включить сигнализацию"],['data-a="light"',h.lights?"Выключить свет":"Включить свет"],['data-a="siren"',"Сирена (тест)"]]);
+}
+function hmA(a){
+  var h=hs();SN.click();lapMsg="";
+  if(a==="doors"){h.doors=h.doors==="locked"?"open":"locked";lapMsg=h.doors==="locked"?"Все двери заблокированы.":"Двери открыты."}
+  else if(a==="alarm"){h.alarm=h.alarm==="armed"?"off":"armed";if(h.alarm==="off")G.siren=false;lapMsg=h.alarm==="armed"?"Сигнализация включена.":"Сигнализация отключена."}
+  else if(a==="light"){h.lights=!h.lights;lapMsg=h.lights?"Свет включён.":"Свет выключен."}
+  else if(a==="siren"){G.siren=true;G.sirT=0;G.sirEnd=5;lapMsg="Сирена на 5 секунд."}
+  save();hmR();
+}
+$("hmBody").onclick=function(e){var a=e.target.getAttribute("data-a");if(a!==null)hmA(a)};
+$("hmX").onclick=function(){glEnd();SN.click()};
+$("gHm").onclick=function(){SN.click();openHm()};
+function codeScreen(t,ms,done){
+  G.ui=true;var o=$("ovCode"),l=$("codeLog"),t0=0;o.hidden=false;l.innerHTML="<div>"+t+"</div>";say(t);
+  (function tk(){
+    if(t0>=ms){l.innerHTML+="<div>Готово. Спасибо.</div>";SN.ok();setTimeout(function(){o.hidden=true;G.ui=false;done()},900);return}
+    l.innerHTML+="<div>"+CODEL[Math.floor(Math.random()*CODEL.length)]+"</div>";tn(1400,1400,.02,"sine",.04);t0+=110;setTimeout(tk,110)
+  })();
+}
+function flashSeq(){
+  if(!S.hack)return tout("Нужны права администратора. Введите admin.");
+  if(S.flash)return tout("Хакерская флешка уже в инвентаре.");
+  G.tmBusy=true;var n=0;tout("Создание образа HACK.USB…");
+  (function t(){
+    if(n>=14){S.flash=true;save();inv();G.fl=.5;SN.ok();tout("УСПЕШНО ВЫДАНО: хакерская флешка 💾");say("Успешно выдана хакерская флешка.");G.tmBusy=false;return}
+    tout(CODEL[Math.floor(Math.random()*CODEL.length)]);tn(1400,1400,.02,"sine",.04);n++;setTimeout(t,120)
+  })();
+}
+function bindFlash(){
+  if(!S.hack)return say("Сначала активируйте хак-меню в перчатке: введите admin в терминале.");
+  codeScreen("Привязка флешки к хак-меню…",2600,function(){S.flash=false;S.ctl=true;S.hand=null;save();inv();say("Флешка привязана и исчезла. В перчатке появилась кнопка «Управление антеннами». Спасибо.")});
+}
+function linkFlash(){
+  codeScreen("Подключение флешки к антенне…",2200,function(){var a=antS();a.st="linked";a.t=Date.now();save();say("Флешка подключена. Антенна взламывается, это займёт около 10 секунд.")});
+}
+function openFlash(){
+  if(!S.hack)return say("Хак-меню в перчатке выключено. Введите admin в терминале.");
+  if(G.world==="pocket")return say("В карманном измерении антенн нет.");
+  var a=antS(),t={normal:"не подключена",linked:"взлом: "+Math.max(0,Math.ceil((HACKWAIT-(Date.now()-(a.t||0)))/1000))+" с",hacked:"взломана",destroyed:"уничтожена"}[a.st];
+  $("flSt").textContent=NM[G.world]+": антенна "+t;glShow("ovFl");say("Управление антеннами.");
+}
+function flClose(){$("ovFl").hidden=true;G.ui=false}
+function flOk(){if(antS().st!=="hacked"){flClose();say("Антенна этого мира не взломана или уничтожена. Подключите флешку к антенне.");return false}return true}
+$("flCap").onclick=function(){if(!flOk())return;flClose();G.sig={x:ANT().x,y:ANT().y,r:0,kind:"cap"};SN.fly();say("Сигнал по всему миру. Глаза роботов горят зелёным: они под вашим контролем.")};
+$("flRel").onclick=function(){if(!flOk())return;flClose();G.rb.forEach(function(r){r.ctrl=false});SN.click();say("Роботы освобождены. Глаза снова голубые.")};
+$("flGat").onclick=function(){if(!flOk())return;flClose();var c=0;G.rb.forEach(function(r){if(!r.dead&&r.ctrl){var a=c++/Math.max(1,G.rb.length)*6.283;r.x=G.x+Math.cos(a)*70;r.y=G.y+Math.sin(a)*70}});G.fl=.4;SN.arrive();say(c?"Роботы собраны возле вас.":"Сначала захватите роботов.")};
+$("flDan").onclick=function(){if(!flOk())return;flClose();G.rb.forEach(function(r){if(r.ctrl)r.dance=4});SN.pet();say("Роботы танцуют.")};
+$("flDes").onclick=function(){if(!flOk())return;flClose();antS().st="destroyed";save();G.rb.forEach(function(r){r.dead=true;addBolt(r.x,r.y-80,r.x,r.y)});addBolt(ANT().x,0,ANT().x,ANT().y-60);G.fl=1;G.sh=1;SN.boom();say("Антенна уничтожена. Все роботы выключены.")};
+function restoreAnt(){
+  var a=antS();
+  if(a.st!=="destroyed")return say("Антенна цела, восстанавливать нечего.");
+  codeScreen("Восстановление антенны…",2200,function(){a.st="hacked";save();spawnRobots();G.fl=.6;G.sh=.4;SN.boom();say("Антенна восстановлена. Роботы снова на месте, глаза голубые.")});
+}
+$("flRes").onclick=function(){flClose();restoreAnt()};
+$("flX").onclick=flClose;
+function openCo(){G.ui=true;$("ovCo").hidden=false;$("coSave").disabled=true;$("coMsg").textContent=""}
+function useKey(){
+  if(S.hand!=="key")return say("Возьмите ключ в руку и нажмите «Вставить».");
+  S.key=false;S.hand=null;S.stage=4;S.run=false;save();inv();G.acting=true;G.at=0;G.bt=0;G.circ=0;G.boomed=false;SN.charge();say("Ключ вставлен. Портал активируется!");
+}
+function openAn(a){G.ui=true;G.cur=a;$("anT").textContent=a.e+" "+a.n;$("ovA").hidden=false}
+function ctx(){
+  if(G.scene!=="play"||G.ui||G.mode||G.acting||G.rm||G.closing||G.pp||!S)return null;
+  var nl=S.lap&&S.lap.w===G.world&&dist(G.x,G.y,S.lap.x,S.lap.y)<64;
+  if(S.hand==="laptop")return{l:"Поставить",f:placeLap};
+  if(S.hand==="flash")return nl?{l:"Вставить флешку",f:openLap}:{l:"Использовать флешку",f:openFlashChoice};
+  if(nl)return{l:"Активировать",f:openLap};
+  if(S.ctl&&S.hack&&G.world!=="pocket"){var an=antS();if(an.st==="destroyed"&&dist(G.x,G.y,ANT().x,ANT().y)<80)return{l:"Восстановить антенну",f:restoreAnt}}
+  if(S.hand==="glove")return{l:"Использовать",f:openGlove};
+  if(G.world==="base"){
+    if(dist(G.x,G.y,TM.x,TM.y)<64){
+      if(S.stage===0)return{l:"Включить",f:boot};
+      if(S.stage===1)return S.auth?{l:"Ввести пароль",f:openPw}:{l:"Приложить карту",f:useCard};
+      if(S.stage===2)return{l:"Ввести координаты",f:openCo};
+      return{l:"Компьютер",f:openPc};
+    }
+    if(S.stage===3&&dist(G.x,G.y,PD.x,PD.y)<64)return{l:"Вставить",f:useKey};
+    if(S.stage>=4&&dist(G.x,G.y,PO.x,PO.y)<175)return{l:"Портал",f:openPo};
+    if(dist(G.x,G.y,AT.x,AT.y)<64)return{l:"Банкомат",f:openAtm};
+  }else if(G.world==="pocket"){
+    if(dist(G.x,G.y,500,210)<80)return{l:"Отдохнуть",f:rest};
+    if(dist(G.x,G.y,130,210)<70)return{l:"Подумать",f:think};
+  }else{
+    if(!G.wp&&dist(G.x,G.y,G.ww/2+110,540)<64)return{l:"Пульт",f:useRemote};
+    if(dist(G.x,G.y,740,262)<64)return{l:hs().doors==="locked"?"Двери заперты":"Войти в дом",f:enterHouse};
+    for(var i=0;i<G.an.length;i++){var a=G.an[i];if(a.st==="wild"&&dist(G.x,G.y,a.x,a.y)<54)return{l:a.e+" "+a.n,f:function(b){return function(){openAn(b)}}(a)}}
+  }
+  return null;
+}
+function useRemote(){
+  if(S.hand!=="key")return say("Возьмите ключ в руку и приложите к пульту.");
+  G.rm={t:0,bt:0};SN.boom();say("Пульт активирован. Портал домой откроется вдали отсюда.");
+}
+function far(){
+  var c=[[150,160],[750,160],[150,520],[750,520],[450,110]].filter(function(q){return dist(G.x,G.y,q[0],q[1])>260});
+  var q=c.length?c[Math.floor(Math.random()*c.length)]:[150,160];return{x:q[0],y:q[1],rise:0,on:false};
+}
+function openPo(){G.ui=true;$("poGo").hidden=!!S.run;$("ovPo").hidden=false}
+function openPc(){G.ui=true;$("pcCo").hidden=S.stage!==3;$("ovPc").hidden=false}
+function fly(dir){G.mode="fly";G.fy=0;G.dir=dir;SN.fly();say(dir==="back"?"Возвращаемся домой…":"Вы входите в портал…")}
+function flyEnd(){
+  G.mode=null;
+  if(G.dir==="pocket")return enterPocket();
+  if(G.dir==="pback")return leavePocket();
+  if(G.dir==="out"){S.stage=3;S.run=false;S.key=true;S.hand=null;save();inv();G.ui=true;$("ovW").hidden=false;say("Выберите мир.")}
+  else{enterBase(false);G.y=190;say("Вы снова дома.");SN.arrive()}
+}
+
+/* ---------- drawing ---------- */
+function bolt(p,w){cx.beginPath();cx.moveTo(p[0][0],p[0][1]);for(var i=1;i<p.length;i++)cx.lineTo(p[i][0],p[i][1]);cx.strokeStyle="rgba(215,190,255,.95)";cx.lineWidth=w;cx.shadowColor="#a273ff";cx.shadowBlur=22;cx.stroke();cx.shadowBlur=0}
+function portal(x,y,rise,mode){
+  var r=58,ry=r*(.22+.78*rise),t=G.t,i;
+  if(mode==="on"){var g=cx.createRadialGradient(x,y,6,x,y,r*1.7);g.addColorStop(0,"rgba(190,140,255,.6)");g.addColorStop(1,"rgba(120,60,255,0)");cx.fillStyle=g;cx.beginPath();cx.ellipse(x,y,r*1.7,ry*1.7,0,0,6.283);cx.fill()}
+  if(mode==="on"&&rise>.4){var g2=cx.createRadialGradient(x,y,2,x,y,r);g2.addColorStop(0,"rgba(255,255,255,.85)");g2.addColorStop(1,"rgba(150,90,255,.45)");cx.fillStyle=g2;cx.beginPath();cx.ellipse(x,y,r,ry,0,0,6.283);cx.fill();
+    for(i=0;i<30;i++){var a=i/30*6.283+t*2,q=.4+.5*Math.abs(Math.sin(t+i));cx.fillStyle="#f1dcff";cx.fillRect(x+Math.cos(a)*r*q,y+Math.sin(a)*ry*q,3,3)}}
+  cx.lineWidth=9;cx.globalAlpha=mode==="prep"?.5+.3*Math.sin(t*4):1;cx.strokeStyle=mode==="off"?"#4a3a78":mode==="prep"?"#8a6ae0":"#cfa8ff";
+  cx.beginPath();cx.ellipse(x,y,r,ry,0,0,6.283);cx.stroke();cx.globalAlpha=1;
+}
+function emo(e,x,y,s){cx.font=s+"px serif";cx.textAlign="center";cx.textBaseline="middle";cx.fillText(e,x,y)}
+var HACKWAIT=10000,CODEL=["void patch(Portal* p){","  p->lock = 0x00;","  mem[i]^=0xA7;","sudo ./burn --usb hack.img","> write block ...... ok","0x7F45 4C46 DEAD BEEF","[ OK ] checksum matched","if(auth(KEY)==OK) return GRANT;"];
+function dPocket(){
+  cx.fillStyle="#0e3a6a";cx.beginPath();cx.ellipse(320,330,110,55,0,0,6.283);cx.fill();cx.strokeStyle="rgba(150,210,255,.5)";cx.lineWidth=3;cx.stroke();
+  for(var i=0;i<4;i++){cx.strokeStyle="rgba(200,230,255,"+(.15+.1*Math.sin(G.t*2+i))+")";cx.lineWidth=1.5;cx.beginPath();cx.ellipse(320,330,30+i*20+((G.t*10)%10),14+i*9,0,0,6.283);cx.stroke()}
+  emo("🌙",560,50,46);emo("🪑",130,210,40);emo("🌳",70,260,52);emo("🌳",580,300,52);
+  var g=cx.createRadialGradient(500,215,4,500,215,80);g.addColorStop(0,"rgba(255,170,60,"+(.45+.1*Math.sin(G.t*7))+")");g.addColorStop(1,"rgba(255,170,60,0)");
+  cx.fillStyle=g;cx.beginPath();cx.arc(500,215,90,0,6.283);cx.fill();emo("🔥",500,210,38);
+}
+function hs(){S.house=S.house||{};return S.house[G.world]||(S.house[G.world]={doors:"open",alarm:"armed",lights:true,hacked:false,bound:false})}
+function dStruct(x,y,prog,on){
+  var rx=92,ry=26,i;
+  cx.fillStyle="#2a2442";cx.beginPath();cx.ellipse(x,y,rx+10,ry+6,0,0,6.283);cx.fill();
+  cx.fillStyle="#3a3260";cx.beginPath();cx.ellipse(x,y-3,rx,ry,0,0,6.283);cx.fill();
+  cx.strokeStyle=on?"#cfa8ff":"rgba(170,130,255,.8)";cx.lineWidth=3;cx.shadowColor="#a273ff";cx.shadowBlur=prog>0?14:0;
+  if(prog>0){cx.beginPath();cx.ellipse(x,y-3,rx-14,ry-8,0,-1.5708,-1.5708+6.283*Math.min(1,prog));cx.stroke()}
+  cx.shadowBlur=0;
+  for(i=0;i<8;i++){
+    var a=i/8*6.283,px=x+Math.cos(a)*(rx+2),py=y-3+Math.sin(a)*(ry+2),lit=on||prog>(i+1)/9;
+    cx.fillStyle="#4a4070";cx.fillRect(px-6,py-26,12,26);cx.fillStyle=lit?"#e0c8ff":"#2e2750";cx.fillRect(px-6,py-26,12,6);
+    if(lit){cx.globalAlpha=.35;cx.fillStyle="#b88cff";cx.beginPath();cx.arc(px,py-24,10,0,6.283);cx.fill();cx.globalAlpha=1}
+  }
+}
+function dLap(x,y){
+  cx.shadowColor="#3dff8a";cx.shadowBlur=14;cx.fillStyle="#06130c";cx.fillRect(x-20,y-26,40,26);cx.shadowBlur=0;
+  cx.strokeStyle="#3dff8a";cx.lineWidth=2;cx.strokeRect(x-20,y-26,40,26);
+  cx.fillStyle="#3dff8a";cx.font="9px monospace";cx.textAlign="left";cx.fillText(">_"+(Math.floor(G.t*2)%2?"█":""),x-16,y-12);
+  cx.fillStyle="#2a3550";cx.fillRect(x-26,y,52,7);
+}
+function dHouse(){
+  var h=hs(),x=640,y=110,w=200,ht=140,i;
+  cx.fillStyle=h.lights?"#3b2f2a":"#14100e";cx.fillRect(x,y,w,ht);
+  cx.fillStyle=h.lights?"#7a5a3a":"#2a1f18";cx.fillRect(x-6,y-26,w+12,26);
+  cx.strokeStyle="#c9a77a";cx.lineWidth=4;cx.strokeRect(x,y,w,ht);
+  var pl=G.siren?["😱","😱","😱"]:h.lights?["🧑‍💻","🧑‍💼","🧑‍🔬"]:["","",""];
+  for(i=0;i<3;i++)emo(pl[i],x+36+i*46,y+62+Math.sin(G.t*3+i)*2,28);
+  cx.fillStyle="#0b1b2b";cx.fillRect(x+w-52,y+8,44,60);emo("🖥️",x+w-30,y+38,24);
+  var c=h.doors==="locked"?"#ff4d5e":"#3dff8a";
+  cx.fillStyle="#6a4a2a";cx.fillRect(x+w/2-20,y+ht-6,40,10);cx.fillStyle=c;cx.beginPath();cx.arc(x+w/2+26,y+ht-1,4,0,6.283);cx.fill();
+  cx.fillStyle="#6a4a2a";cx.fillRect(x-4,y+90,8,40);cx.fillStyle=c;cx.beginPath();cx.arc(x-2,y+84,4,0,6.283);cx.fill();
+  if(h.doors==="locked"){emo("🔒",x+w/2,y+ht+16,20);emo("🔒",x-16,y+112,18)}
+  if(alarmOn(h)){cx.fillStyle=G.siren?"#ff2a2a":"#ff4d5e";cx.beginPath();cx.arc(x+w-10,y-34,6+(G.siren?3*Math.sin(G.t*14):0),0,6.283);cx.fill()}
+}
+function ANT(){return G.world==="base"?{x:70,y:110}:{x:140,y:150}}
+function antS(){S.ant=S.ant||{};return S.ant[G.world]||(S.ant[G.world]={st:"normal"})}
+function spawnRobots(){G.rb=[];G.sig=null;G.cp=null;if(!S||antS().st==="destroyed")return;for(var i=0;i<5;i++)G.rb.push({x:rnd(80,G.ww-80),y:rnd(140,G.wh-60),ph:rnd(0,9),ctrl:false,dead:false,dance:0})}
+function dAnt(a,x,y){
+  if(a.st==="destroyed"){emo("💥",x,y,28);cx.fillStyle="#333";cx.fillRect(x-6,y-4,12,8);return}
+  cx.fillStyle="#6b7490";cx.fillRect(x-4,y-50,8,54);cx.fillStyle="#9aa3bf";cx.beginPath();cx.moveTo(x,y-72);cx.lineTo(x+16,y-48);cx.lineTo(x-16,y-48);cx.fill();
+  var c=a.st==="hacked"?"#3dff8a":a.st==="linked"?"#ffd24a":"#ff4d5e";
+  cx.fillStyle=c;cx.beginPath();cx.arc(x,y-76,5+(a.st==="hacked"?2*Math.sin(G.t*6):0),0,6.283);cx.fill();
+  if(a.st!=="normal"){cx.strokeStyle=c;cx.lineWidth=2;cx.globalAlpha=.4;for(var k=1;k<=2;k++){cx.beginPath();cx.arc(x,y-76,12+((G.t*30+k*20)%40),0,6.283);cx.stroke()}cx.globalAlpha=1}
+}
+function dRobot(r){
+  if(r.dead)return;var x=r.x,y=r.y+Math.sin(G.t*4+r.ph)*2,c=r.ctrl?"#4dff9a":"#4db8ff";
+  cx.fillStyle="#8a93a8";cx.fillRect(x-11,y-6,22,22);cx.fillStyle="#5d667c";cx.fillRect(x-8,y+16,6,8);cx.fillRect(x+2,y+16,6,8);
+  cx.fillStyle="#a9b2c8";cx.fillRect(x-10,y-22,20,16);cx.strokeStyle="#5d667c";cx.lineWidth=2;cx.beginPath();cx.moveTo(x,y-22);cx.lineTo(x,y-29);cx.stroke();
+  cx.shadowColor=c;cx.shadowBlur=10;cx.fillStyle=c;
+  cx.beginPath();cx.arc(x-4,y-14,3,0,6.283);cx.fill();cx.beginPath();cx.arc(x+4,y-14,3,0,6.283);cx.fill();cx.shadowBlur=0;
+  cx.beginPath();cx.arc(x,y-30,2,0,6.283);cx.fill();
+}
+function drawTitle(){
+  cx.setTransform(DPR,0,0,DPR,0,0);var w=W0,h=H0,g=cx.createLinearGradient(0,0,0,h);g.addColorStop(0,"#05020f");g.addColorStop(.7,"#241450");g.addColorStop(1,"#3a1c70");cx.fillStyle=g;cx.fillRect(0,0,w,h);
+  for(var i=0;i<6;i++){cx.fillStyle="rgba(60,40,110,.45)";cx.beginPath();cx.ellipse((i*140+G.t*14)%(w+240)-120,70+i*38,150,34,0,0,6.283);cx.fill()}
+  cx.fillStyle="#0a0618";cx.beginPath();cx.moveTo(0,h);cx.lineTo(0,h*.82);cx.lineTo(w*.3,h*.76);cx.lineTo(w*.6,h*.83);cx.lineTo(w,h*.77);cx.lineTo(w,h);cx.fill();
+  var s=cx.save();cx.translate(w/2,h*.86);portal(0,0,1,"on");cx.restore();
+  G.bolts.forEach(function(b){bolt(b.p,3)});
+  if(G.fl>.02){cx.fillStyle="rgba(255,255,255,"+G.fl*.5+")";cx.fillRect(0,0,w,h)}
+}
+function drawPlay(){
+  var vw=W0/sc,vh=H0/sc,ox=G.ww<vw?(G.ww-vw)/2:Math.max(0,Math.min(G.ww-vw,G.x-vw/2)),oy=G.wh<vh?(G.wh-vh)/2:Math.max(0,Math.min(G.wh-vh,G.y-vh/2)),c=cur(),i;
+  cx.setTransform(DPR*sc,0,0,DPR*sc,(-ox+(Math.random()-.5)*G.sh*10)*DPR*sc,(-oy+(Math.random()-.5)*G.sh*10)*DPR*sc);
+  cx.fillStyle="#05020f";cx.fillRect(ox-20,oy-20,vw+40,vh+40);
+  cx.fillStyle=c.bg;cx.fillRect(0,0,G.ww,G.wh);cx.strokeStyle=c.ln;cx.lineWidth=1;
+  for(i=0;i<=G.ww;i+=40){cx.beginPath();cx.moveTo(i,0);cx.lineTo(i,G.wh);cx.stroke()}
+  for(i=0;i<=G.wh;i+=40){cx.beginPath();cx.moveTo(0,i);cx.lineTo(G.ww,i);cx.stroke()}
+  cx.strokeStyle="#a273ff";cx.lineWidth=4;cx.strokeRect(2,2,G.ww-4,G.wh-4);
+  if(G.world==="base"){
+    var st=S.stage;
+    cx.fillStyle="#241b44";cx.fillRect(TM.x-30,TM.y-36,60,72);cx.fillStyle=st===0?"#05050a":st===1?"#1a5ea8":st===2?"#1f9d62":"#7b3fe4";cx.fillRect(TM.x-24,TM.y-30,48,34);
+    cx.fillStyle="#fff";cx.font="11px Rubik";cx.textAlign="center";cx.fillText(st===0?"":st===1?(S.auth?"ПАРОЛЬ":"КАРТА"):st===2?"КООРД.":"ГОТОВО",TM.x,TM.y-10);emo("🪪",TM.x,TM.y+22,16);
+    cx.fillStyle="#3a2c68";cx.fillRect(PD.x-18,PD.y-30,36,64);cx.fillStyle=st===3?"rgba(255,210,74,"+(.5+.4*Math.sin(G.t*5))+")":"#0b0719";cx.fillRect(PD.x-5,PD.y-16,10,20);
+    if(st>=4)emo("🗝️",PD.x,PD.y-6,20);
+    cx.fillStyle="#2c3e5c";cx.fillRect(AT.x-30,AT.y-44,60,88);cx.fillStyle="#06222a";cx.fillRect(AT.x-22,AT.y-36,44,28);cx.fillStyle="#7fe0ff";cx.font="10px Rubik";cx.textAlign="center";cx.fillText("ФоксБанк",AT.x,AT.y-18);cx.fillStyle="#555";cx.fillRect(AT.x-16,AT.y+4,32,6);emo("💳",AT.x,AT.y+26,16);
+    dStruct(PO.x,PO.y+62,st>=4?G.circ:st===3?.35:0,st>=4&&G.rise>=1);
+    if(!(G.acting&&G.rise<=0))portal(PO.x,PO.y,G.rise,st>=4?"on":st===3?"prep":"off");
+  }else{
+    G.dec.forEach(function(d){emo(c.d,d.x,d.y,d.s)});if(G.world==="pocket")dPocket();else{dHouse();dStruct(G.ww/2,G.wh-50,1,false)}
+    if(G.wp){dStruct(G.wp.x,G.wp.y+62,G.wp.circ===undefined?1:G.wp.circ,G.wp.on);if(G.wp.rise>0)portal(G.wp.x,G.wp.y,G.wp.rise,"on")}if(G.world!=="pocket")emo("📟",G.ww/2+110,540,34);
+    G.an.forEach(function(a){if(a.st==="sent"||(a.st==="freed"&&Math.abs(a.x-G.x)>900))return;emo(a.e,a.x,a.y+Math.sin(G.t*4+a.ph)*3,a.st==="taken"?26:32)});
+  }
+  if(G.world!=="pocket")dAnt(antS(),ANT().x,ANT().y);G.rb.forEach(dRobot);if(G.pp)portal(G.pp.x,G.pp.y,G.pp.rise,"on");if(S&&S.lap&&S.lap.w===G.world)dLap(S.lap.x,S.lap.y);
+  if(G.sig){cx.strokeStyle="rgba(61,255,138,"+Math.max(0,1-G.sig.r/1300)+")";cx.lineWidth=6;cx.beginPath();cx.arc(G.sig.x,G.sig.y,G.sig.r,0,6.283);cx.stroke()}
+  emo("🦊",G.x,G.y+Math.sin(G.t*10)*(Math.hypot(G.jx+G.kx,G.jy+G.ky)>.1?3:0),38);
+  if(S&&S.hack){cx.strokeStyle="rgba(61,255,138,"+(.5+.3*Math.sin(G.t*6))+")";cx.lineWidth=3;cx.beginPath();cx.arc(G.x,G.y,30,0,6.283);cx.stroke()}
+  if(G.sw){cx.strokeStyle="rgba(180,220,255,.7)";cx.lineWidth=2;cx.beginPath();cx.ellipse(G.x,G.y+14,20+4*Math.sin(G.t*6),8,0,0,6.283);cx.stroke()}
+  if(S&&S.contract&&G.cp){cx.strokeStyle="rgba(255,210,74,.55)";cx.lineWidth=2;cx.setLineDash([4,5]);cx.beginPath();cx.moveTo(G.x,G.y);cx.lineTo(G.cp.x,G.cp.y);cx.stroke();cx.setLineDash([]);emo(S.contract.e,G.cp.x,G.cp.y+Math.sin(G.t*5)*2,30);emo("✨",G.cp.x+14,G.cp.y-16,12)}
+  if(G.world!=="base"&&G.wp&&G.wp.on){var an2=Math.atan2(G.wp.y-G.y,G.wp.x-G.x);cx.save();cx.translate(G.x,G.y);cx.rotate(an2);cx.fillStyle="#ffd24a";cx.font="28px sans-serif";cx.fillText("➤",64,0);cx.restore()}
+  G.bolts.forEach(function(b){bolt(b.p,3.5)});
+  if(G.siren){cx.setTransform(DPR,0,0,DPR,0,0);cx.fillStyle="rgba(255,30,30,"+(.12+.1*Math.sin(G.t*10))+")";cx.fillRect(0,0,W0,H0)}
+  if(G.mode==="fly"){
+    cx.setTransform(DPR,0,0,DPR,0,0);var k=G.fy,fx=W0/2,fy=H0/2;cx.fillStyle="rgba(5,2,14,"+Math.min(1,k*1.6)+")";cx.fillRect(0,0,W0,H0);
+    for(i=0;i<14;i++){var u=((i/14)+G.t*.9)%1,r=Math.pow(u,2.4)*Math.max(W0,H0)*.9+4;cx.strokeStyle="hsla("+(270+u*60)+",85%,"+(45+u*25)+"%,"+(.15+u*.7)+")";cx.lineWidth=2+u*12;cx.beginPath();cx.ellipse(fx,fy,r,r*.8,0,0,6.283);cx.stroke()}
+    for(i=0;i<3;i++){var an=rnd(0,6.283);bolt([[fx,fy],[fx+Math.cos(an)*W0*.2+rnd(-20,20),fy+Math.sin(an)*H0*.2],[fx+Math.cos(an)*W0*.5,fy+Math.sin(an)*H0*.5]],2.5)}
+    cx.fillStyle="rgba(255,255,255,"+Math.max(0,k-.85)*6+")";cx.fillRect(0,0,W0,H0);
+  }else if(G.fl>.02){cx.setTransform(DPR,0,0,DPR,0,0);cx.fillStyle="rgba(255,255,255,"+G.fl+")";cx.fillRect(0,0,W0,H0)}
+}
+
+/* ---------- loop ---------- */
+var last=performance.now(),hint="";
+function setHint(h){if(h!==hint){hint=h;$("hint").textContent=h}}
+function frame(now){
+  var dt=Math.min(.05,(now-last)/1000);last=now;G.t+=dt;G.fl*=.9;G.sh*=.9;
+  G.bolts.forEach(function(b){b.l-=dt});G.bolts=G.bolts.filter(function(b){return b.l>0});
+  if(G.scene==="title"){
+    if(G.t>G.nx){var x=rnd(.2,.8)*W0;addBolt(x,0,x+rnd(-60,60),H0*.8);G.fl=.9;G.nx=G.t+rnd(2.2,5);setTimeout(SN.thunder,400)}
+    drawTitle();
+  }else{
+    var inB=G.world==="base";
+    if(G.mode==="fly"){G.fy+=dt/2.2;if(G.fy>=1)flyEnd()}
+    else if(!G.ui){
+      var ux=G.jx+G.kx,uy=G.jy+G.ky,m=Math.hypot(ux,uy);if(m>1){ux/=m;uy/=m}
+      if(!G.acting&&!G.rm){
+        G.x=Math.max(22,Math.min(G.ww-22,G.x+ux*150*(S.fast?2.2:1)*(G.sw?.45:1)*dt));G.y=Math.max(40,Math.min(G.wh-22,G.y+uy*150*(S.fast?2.2:1)*(G.sw?.45:1)*dt));
+        if(G.world==="pocket"){var w2=Math.pow((G.x-320)/110,2)+Math.pow((G.y-330)/55,2)<1;if(w2&&!G.sw){tn(500,900,.15,"sine",.06);say("Вы плаваете. Вода тёплая.")}G.sw=w2}
+        var P=inB?PO:G.wp,on=inB?(S.stage>=4&&S.run&&G.rise>=1&&!G.closing):!!(G.wp&&G.wp.on),d=P?dist(G.x,G.y,P.x,P.y):1e9;
+        if(on&&d<105){var k2=1-d/105;G.x+=(P.x-G.x)/d*k2*k2*280*dt;G.y+=(P.y-G.y)/d*k2*k2*280*dt;G.sh=Math.max(G.sh,k2*.6);if(d<26)fly(inB?"out":"back")}
+      }
+      if(G.acting){
+        G.at+=dt;G.circ=Math.min(1,G.at/1.6);G.rise=Math.max(0,Math.min(1,(G.at-1.6)/1.8));
+        if(G.at<1.6)G.sh=.15;
+        else{
+          if(!G.boomed){G.boomed=true;G.fl=1;G.sh=1;SN.boom();for(var q=0;q<6;q++)addBolt(PO.x+rnd(-200,200),0,PO.x+rnd(-40,40),PO.y)}
+          G.sh=Math.max(G.sh,.4);G.bt-=dt;
+          if(G.bt<=0){G.bt=.2;addBolt(PO.x+rnd(-160,160),0,PO.x+rnd(-30,30),PO.y);G.fl=.4}
+        }
+        if(G.at>3.6){G.acting=false;G.circ=1;say("Портал активирован. Выберите «Старт» в меню.");openPo()}
+      }
+      if(G.rm){
+        var r=G.rm,rx=G.ww/2+110;r.t+=dt;r.bt-=dt;G.sh=Math.max(G.sh,.4);
+        if(r.bt<=0){r.bt=.2;if(r.t<1.6)addBolt(rx+rnd(-60,60),G.y-340,rx,540);else if(G.wp)addBolt(G.wp.x+rnd(-120,120),G.wp.y-320,G.wp.x,G.wp.y);G.fl=.45}
+        if(r.t>=1.6&&!G.wp)G.wp=far();
+        if(G.wp){G.wp.circ=Math.max(0,Math.min(1,(r.t-1.6)/1.0));G.wp.rise=Math.max(0,Math.min(1,(r.t-2.6)/1.2));if(r.t>=2.6&&!r.boom){r.boom=true;G.fl=1;G.sh=1;SN.boom()}}
+        if(r.t>3.9){G.rm=null;G.wp.on=true;G.wp.rise=1;G.wp.circ=1;say("Портал домой открыт. Идите по стрелке.")}
+      }
+      if(G.closing){
+        G.rise=Math.max(0,G.rise-dt/3);G.sh=Math.max(G.sh,.15);
+        if(G.rise<=0){G.closing=false;S.stage=3;S.run=false;S.key=true;save();inv();say("Портал закрыт. Ключ вернулся в инвентарь.")}
+      }
+      G.an.forEach(function(a){
+        if(a.st==="wild"){a.x+=Math.sin(G.t*.7+a.ph)*14*dt;a.y+=Math.cos(G.t*.5+a.ph)*10*dt}
+        else if(a.st==="taken"){a.x+=(G.x-30-a.x)*Math.min(1,dt*3);a.y+=(G.y+14-a.y)*Math.min(1,dt*3)}
+        else if(a.st==="freed"){a.x+=a.vx*dt}
+      });
+    }
+    if(G.siren){G.sirT-=dt;G.sirEnd-=dt;if(G.sirT<=0){G.sirT=.6;tn(900,700,.28,"sine",.1)}if(G.sirEnd<=0)G.siren=false}
+    if(G.pp){G.pp.t+=dt;G.pp.rise=Math.min(1,G.pp.t);if(G.pp.t>1.5){var dr=G.pp.dir;G.pp=null;fly(dr)}}
+    if(S.contract){G.cp=G.cp||{x:G.x,y:G.y};G.cp.x+=(G.x-34-G.cp.x)*Math.min(1,dt*4);G.cp.y+=(G.y+18-G.cp.y)*Math.min(1,dt*4)}
+    G.rb.forEach(function(r){
+      if(r.dead)return;
+      if(r.dance>0){r.dance-=dt;r.x+=Math.sin(G.t*14+r.ph)*60*dt;return}
+      if(r.ctrl){var dd=dist(r.x,r.y,G.x,G.y);if(dd>60){r.x+=(G.x-r.x)/dd*170*dt;r.y+=(G.y-r.y)/dd*170*dt}}
+      else{r.x+=Math.sin(G.t*.6+r.ph)*28*dt;r.y+=Math.cos(G.t*.5+r.ph)*28*dt}
+      r.x=Math.max(20,Math.min(G.ww-20,r.x));r.y=Math.max(40,Math.min(G.wh-20,r.y));
+    });
+    if(G.sig){G.sig.r+=650*dt;G.rb.forEach(function(r){if(!r.dead&&!r.ctrl&&G.sig.kind==="cap"&&dist(r.x,r.y,G.sig.x,G.sig.y)<G.sig.r)r.ctrl=true});if(G.sig.r>1300)G.sig=null}
+    if(S&&S.ant)for(var ak in S.ant){if(S.ant[ak].st==="linked"&&Date.now()-S.ant[ak].t>=HACKWAIT){S.ant[ak].st="hacked";S.flashFn=true;save();SN.ok();say("Антенна в мире «"+NM[ak]+"» взломана. В флешке открылась новая функция.")}}
+    var c=ctx(),ab=$("act");ab.hidden=!c;if(c){ab.textContent=c.l;ab.onclick=c.f}
+    if(S){
+      var h=G.world==="pocket"?"Отдыхайте: костёр, скамья, пруд. Выйти: перчатка, «Выйти из измерения»":G.world!=="base"?(G.wp?(G.wp.on?"Портал домой открыт, идите по стрелке. ":"Портал открывается… "):"Приложите ключ к пульту 📟, чтобы открыть путь домой. ")+"Забрано: "+G.an.filter(function(a){return a.st==="taken"}).length+", дома: "+G.home:
+        ["Подойдите к компьютеру и нажмите «Включить»",S.auth?"Введите пароль с карты":"Возьмите карту в руку (значок вверху) и приложите к компьютеру","Введите координаты телепорта","Возьмите ключ в руку, подойдите к замку справа и вставьте его",S.run?"Портал запущен. Войдите в кольцо":"Подойдите к порталу и откройте меню"][S.stage];
+      setHint(h);
+    }
+    drawPlay();
+  }
+  requestAnimationFrame(frame);
+}
+
+/* ---------- input ---------- */
+var jb=$("joy"),kn=$("knob"),jid=null;
+function jm(e){var r=jb.getBoundingClientRect(),dx=e.clientX-(r.left+r.width/2),dy=e.clientY-(r.top+r.height/2),m=Math.hypot(dx,dy),R=r.width/2-14;if(m>R){dx*=R/m;dy*=R/m}kn.style.transform="translate("+dx+"px,"+dy+"px)";G.jx=dx/R;G.jy=dy/R}
+jb.addEventListener("pointerdown",function(e){jid=e.pointerId;jb.setPointerCapture(jid);jm(e)});
+jb.addEventListener("pointermove",function(e){if(e.pointerId===jid)jm(e)});
+["pointerup","pointercancel"].forEach(function(ev){jb.addEventListener(ev,function(e){if(e.pointerId===jid){jid=null;G.jx=0;G.jy=0;kn.style.transform="translate(0,0)"}})});
+var KM={ArrowLeft:[-1,0],a:[-1,0],ArrowRight:[1,0],d:[1,0],ArrowUp:[0,-1],w:[0,-1],ArrowDown:[0,1],s:[0,1]},kd={};
+function kc(){var x=0,y=0;for(var k in kd){x+=KM[k][0];y+=KM[k][1]}G.kx=Math.max(-1,Math.min(1,x));G.ky=Math.max(-1,Math.min(1,y))}
+document.addEventListener("keydown",function(e){if(e.target.tagName==="INPUT")return;if(KM[e.key]){kd[e.key]=1;kc()}if((e.key==="e"||e.key===" ")&&!$("act").hidden)$("act").click()});
+document.addEventListener("keyup",function(e){delete kd[e.key];kc()});
+var started=false;
+document.addEventListener("pointerdown",function(){if(!started){started=true;ac();music(true)}},{once:false});
+$("s_flash").onclick=function(){S.hand=S.hand==="flash"?null:"flash";SN.click();inv();if(S.hand==="flash")say("Хакерская флешка в руке.")};
+$("s_lap").onclick=function(){S.hand=S.hand==="laptop"?null:"laptop";SN.click();inv();if(S.hand==="laptop")say("Хакерский компьютер в руке. Нажмите «Поставить».")};
+$("s_glove").onclick=function(){S.hand=S.hand==="glove"?null:"glove";SN.click();inv();if(S.hand==="glove")say("Перчатка Лискас в руке. Нажмите «Использовать».")};
+$("s_bank").onclick=function(){S.hand=S.hand==="bank"?null:"bank";SN.click();inv();if(S.hand==="bank")say("Банковская карта ФоксБанка. Первоначальный PIN-код: 1234. Игровая, ненастоящая.")};
+$("s_card").onclick=function(){S.hand=S.hand==="card"?null:"card";SN.click();inv();if(S.hand==="card")say("На карте написан пароль: "+S.pw)};
+$("s_key").onclick=function(){S.hand=S.hand==="key"?null:"key";SN.click();inv()};
+$("bNew").onclick=function(){SN.click();newGame()};
+$("bCont").onclick=function(){SN.click();cont()};
+$("bSet").onclick=function(){SN.click();$("ovMenu").hidden=true;$("ovSet").hidden=false;$("rMus").value=ST.mv;$("cMus").checked=!!ST.mus;$("cSfx").checked=!!ST.sfx;$("cVox").checked=!!ST.vox};
+$("bBack").onclick=function(){SN.click();$("ovSet").hidden=true;$("ovMenu").hidden=false;showHud(false)};
+$("rMus").oninput=function(){ST.mv=+this.value;if(MG)MG.gain.value=ST.mv*.5;saveSet()};
+$("cMus").onchange=function(){ST.mus=this.checked?1:0;saveSet();music(!!ST.mus&&started)};
+$("cSfx").onchange=function(){ST.sfx=this.checked?1:0;saveSet()};
+$("cVox").onchange=function(){ST.vox=this.checked?1:0;saveSet();if(!ST.vox&&window.speechSynthesis)try{speechSynthesis.cancel()}catch(e){}};
+$("bReset").onclick=function(){try{localStorage.removeItem("liskas2")}catch(e){}S=null;$("bCont").hidden=true;say("Прогресс сброшен.")};
+$("bExit").onclick=function(){SN.click();hideAll();music(false);$("ovBye").hidden=false};
+$("bBye").onclick=function(){toMenu()};
+$("menuB").onclick=function(){SN.click();toMenu()};
+function toMenu(){hideAll();showHud(false);G.scene="title";G.mode=null;G.ui=false;$("bCont").hidden=!loadS();$("ovMenu").hidden=false;$("sub").textContent="";music(true)}
+$("coOk").onclick=function(){
+  var v=["cx","cy","cz"].map(function(i){return $(i).value});
+  if(v.some(function(x){return x===""||isNaN(+x)})){SN.err();$("coMsg").textContent="Введите числа во все поля";return}
+  SN.ok();$("coMsg").textContent="Координаты приняты. Теперь сохраните.";$("coSave").disabled=false;
+};
+$("coSave").onclick=function(){
+  S.dest={x:+$("cx").value,y:+$("cy").value,z:+$("cz").value};S.stage=3;save();$("ovCo").hidden=true;G.ui=false;SN.ok();G.fl=.4;
+  say("Координаты сохранены. Портал подготовлен. Осталось вставить ключ.");
+};
+$("pwOk").onclick=function(){
+  if($("pwIn").value===S.pw){S.stage=2;save();$("ovPw").hidden=true;G.ui=false;SN.ok();G.fl=.4;say("Доступ разрешён. Введите координаты телепорта.");setTimeout(openCo,2800)}
+  else{SN.err();$("pwMsg").textContent="Неверный пароль"}
+};
+$("pwX").onclick=function(){$("ovPw").hidden=true;G.ui=false};
+$("poGo").onclick=function(){S.run=true;save();$("ovPo").hidden=true;G.ui=false;SN.ok();say("Портал запущен. Войдите в кольцо.")};
+$("poOff").onclick=function(){$("ovPo").hidden=true;G.ui=false;S.run=false;G.closing=true;SN.fly();say("Портал закрывается…")};
+$("poX").onclick=function(){$("ovPo").hidden=true;G.ui=false};
+$("pcCo").onclick=function(){$("ovPc").hidden=true;openCo()};
+$("pcOff").onclick=function(){
+  $("ovPc").hidden=true;G.ui=false;
+  if(S.stage>=4){SN.err();return say("Сначала выключите портал.")}
+  S.stage=0;S.auth=0;S.card=true;S.dest=null;S.hand=null;save();inv();SN.boot();say("Компьютер выключен. Карта доступа вернулась в инвентарь.");
+};
+$("pcX").onclick=function(){$("ovPc").hidden=true;G.ui=false};
+$("mnLogin").onclick=function(){SN.ok();$("ovMain").hidden=true;G.ui=false;S.stage=1;save();say("Загрузка завершена. Возьмите карту доступа в руку и приложите к компьютеру.")};
+$("mnOff").onclick=function(){SN.click();$("ovMain").hidden=true;G.ui=false;say("Компьютер выключен.")};
+$("coX").onclick=function(){$("ovCo").hidden=true;G.ui=false};
+Array.prototype.forEach.call(document.querySelectorAll("#ovW button"),function(b){b.onclick=function(){$("ovW").hidden=true;enterWorld(b.getAttribute("data-w"))}});
+function anAct(st,msg){var a=G.cur;if(!a)return;a.st=st;if(st==="sent")G.home++;if(st==="freed")a.vx=(Math.random()<.5?-1:1)*140;SN.pet();$("ovA").hidden=true;G.ui=false;say(a.n+" "+msg)}
+$("aTake").onclick=function(){anAct("taken","теперь с вами.")};
+$("aHome").onclick=function(){anAct("sent","отправлен домой через портал.")};
+$("aFree").onclick=function(){anAct("freed","убегает на свободу.")};
+$("aX").onclick=function(){$("ovA").hidden=true;G.ui=false};
+
+var NAMES=["ПОРТАЛ ЛИСКИ","ДОРОГА ДОМОЙ","КЛЮЧ И ПОРТАЛ","ГРОМОВОЙ ПОРТАЛ","ЛИСКА: ШТОРМ"];
+$("ttl").textContent=NAMES[Math.floor(Math.random()*NAMES.length)];
+$("bCont").hidden=!loadS();
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
